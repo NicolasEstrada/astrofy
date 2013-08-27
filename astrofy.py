@@ -8,8 +8,10 @@ __version__ = "0.1"
 import os
 import sys
 import json
+import string
 import datetime
 
+import random
 from random import choice
 
 import tornado.httpserver
@@ -150,7 +152,9 @@ class PikaClient(object):
                         data['classified']
                     )
             )
-            self.websocket.write_message(msg)
+            self.websocket.write_message(
+                json.dumps(data, sort_keys=True,
+                indent=4, separators=('<br/>', ': ')))
         else:
             if data['client_id'] != id(self):
                 if not self.websocket.client_exists(data['client_id']):
@@ -173,14 +177,22 @@ class PikaClient(object):
         tornado.ioloop.IOLoop.instance().stop()
 
 
+    def path_generator(self, size=10, chars=string.ascii_lowercase + string.digits):
+        return ''.join(random.choice(chars) for x in range(size))
+
     def publish_image(self, ws_msg):
         properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
 
         data = json.dumps(
             {
-                "source": None,
-                "path": "",
-                "object_data": "",
+                "source": "SDSS, DR{0}".format(random.randint(7, 10)),
+                "path": "/tmp/astrofy/images/{0}.fits".format(self.path_generator()),
+                "object_data": {
+                    "type": choice(["star", "galaxy", "unknown"]),
+                    "shape": random.randint(1, 20),
+                    "dec": random.randint(0, 360),
+                    "ra": random.randint(0, 90),
+                },
                 "classified": 0,
                 "event": 0,
                 "client_id": id(self)
@@ -280,7 +292,7 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
         ioloop.add_timeout(1000, self.pika_client.connect)
 
     def on_message(self,msg):
-        'A message on the Webscoket.'
+        'A message on the Websocket.'
 
         print "Message: [{0}] on the Websocket".format(msg)
         self.pika_client.publish_image(msg)
