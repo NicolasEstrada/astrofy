@@ -121,51 +121,95 @@ class PikaClient(object):
     def on_pika_message(self, channel, method, header, body):
         data = json.loads(body)
 
+        # # New client notification
+        # if 'new_client' in data:
+        #     if data['id'] != id(self):
+        #         if not self.websocket.client_exists(data['id']):
+        #             self.websocket.add_client(data['id'])
+        #         if data['new_client']:
+        #             self.new_client(False, data['id'])
+        # else:
+        #     msg = "{0} says({1}): {2}".format(
+        #         data['id'],
+        #         str(datetime.datetime.now()),
+        #         data['msg']
+        #     )
+        #     self.websocket.write_message(msg)
+
+        # print data, ' | ' , id(self)
+        # print self.websocket.client_ids
+
         # New client notification
-        if 'new_client' in data:
-            if data['id'] != id(self):
-                if not self.websocket.client_exists(data['id']):
-                    self.websocket.add_client(data['id'])
-                if data['new_client']:
-                    self.new_client(False, data['id'])
-        else:
-            msg = "{0} says({1}): {2}".format(
-                data['id'],
-                str(datetime.datetime.now()),
-                data['msg']
+        if not data['event']:
+            # Normal message
+            msg = (" Image source: {0},\n Path: {1},\n "
+                   "Data: {2},\n Classified: {3}".format(
+                        data['source'],
+                        data['path'],
+                        data['object_data'],
+                        data['classified']
+                    )
             )
             self.websocket.write_message(msg)
+        else:
+            if data['client_id'] != id(self):
+                if not self.websocket.client_exists(data['client_id']):
+                    if data['event'] < 3:
+                        self.websocket.add_client(data['client_id'])
+                    if (data['event'] == 1) and (data['client_id'] != id(self)):
+                        self.new_client(data['client_id'])
+                elif data['event'] == 3:
+                    self.websocket.remove_client(data['client_id'])
 
         print data, ' | ' , id(self)
         print self.websocket.client_ids
 
 
     def on_basic_cancel(self, frame):
-        self.websocket.remove_client(id(self))
         self.connection.close()
 
-
     def on_closed(self, connection):
+        # self.connection.close()
         tornado.ioloop.IOLoop.instance().stop()
 
 
-    def sample_message(self, ws_msg):
+    def publish_image(self, ws_msg):
         properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
 
-        data = json.dumps({"msg": ws_msg, "id": id(self)})
-        self.channel.basic_publish(
-            exchange='astrofy',
-            routing_key='astrofy.{0}'.format(
-                choice(self.websocket.client_ids)),
-            body = data,
-            properties=properties
+        data = json.dumps(
+            {
+                "source": None,
+                "path": "",
+                "object_data": "",
+                "classified": 0,
+                "event": 0,
+                "client_id": id(self)
+            }
         )
 
+        if self.websocket.client_ids:
+            self.channel.basic_publish(
+                exchange='astrofy',
+                routing_key='astrofy.{0}'.format(
+                    choice(self.websocket.client_ids)),
+                body = data,
+                properties=properties
+            )
 
-    def new_client(self, new=True, client_id=None):
+
+    def new_client(self, client_id=None):
         properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
 
-        data = json.dumps({"new_client": new, "id": id(self)})
+        data = json.dumps(
+            {
+                "source": None,
+                "path": "",
+                "object_data": "",
+                "classified": 0,
+                "event": 1,
+                "client_id": id(self)
+            }
+        )
         if not client_id:
             self.channel.basic_publish(
                 exchange='astrofy',
@@ -173,6 +217,37 @@ class PikaClient(object):
                 body = data,
                 properties=properties
             )
+        else:
+            self.channel.basic_publish(
+                exchange='astrofy',
+                routing_key='astrofy.{0}'.format(client_id),
+                body = data,
+                properties=properties
+            )
+
+
+    def remove_client(self, client_id=None):
+        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
+
+        data = json.dumps(
+            {
+                "source": None,
+                "path": "",
+                "object_data": "",
+                "classified": 0,
+                "event": 3,
+                "client_id": id(self)
+            }
+        )
+
+        if not client_id:
+            for cid in self.websocket.client_ids:            
+                self.channel.basic_publish(
+                    exchange='astrofy',
+                    routing_key='astrofy.{0}'.format(cid),
+                    body = data,
+                    properties=properties
+                )
         else:
             self.channel.basic_publish(
                 exchange='astrofy',
@@ -208,12 +283,13 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
         'A message on the Webscoket.'
 
         print "Message: [{0}] on the Websocket".format(msg)
-        self.pika_client.sample_message(msg)
+        self.pika_client.publish_image(msg)
 
     def on_close(self):
         'Closing the websocket ...'
 
-        print "WebSocket Closed"        
+        print "WebSocket Closed"
+        self.pika_client.remove_client()
         self.pika_client.connection.close()
 
     def client_exists(self, client_id):

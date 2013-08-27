@@ -32,7 +32,7 @@ function ws_init(url) {
 			log("Connection established");
 		};
 	ws.onmessage = function(msg){
-			log("Message Received:  '" + msg.data + "'" );
+			log("Image Received [ " + msg.data + " ]" );
 		};
 	ws.onclose = function(){
 			log("Connection Closed");
@@ -41,7 +41,7 @@ function ws_init(url) {
 }
 
 function ws_send(msg){
-	log("Send: " + msg);
+	log("Send Image: " + msg);
 	ws.send(msg);
 }
 
