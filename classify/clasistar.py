@@ -18,7 +18,7 @@ class ClassiStar(object):
 		.
 	"""
 
-	def __init__(self, arg):
+	def __init__(self, **arg):
 		"""initiaze object parameters.
 
 		Args:
@@ -28,7 +28,12 @@ class ClassiStar(object):
 		"""
 		super(ClassiStar, self).__init__()
 
-	def _get_object(self, arg):
+		self.uri = "protocol://some/location/somewhere"
+		self.id = "sdss.274.51913.93.26"
+		self.objid = "1237654669203079226"
+		self.obj_json = None
+
+	def _get_object(self, **arg):
 		""" Get the object
 		
 		Retrieves the objects related to the provided uri and id
@@ -36,6 +41,23 @@ class ClassiStar(object):
 
 		Args:
 			uri: direction(s) (absolute or relative) to fetch the file(s)
+
+		Returns:
+			A bool representing if the operation was successful or not.
+		
+		Raise:
+			Exception: Uncaught exception.
+		"""
+
+		# Get object
+		# load on self.obj_json
+		pass
+
+	def classify(self, **arg):
+		""" Classify the loaded object.
+
+		Classify the object with a SVM (external library) based on the
+		extracted features.
 
 		Returns:
 			A dict mapping representing the classification result.
@@ -48,12 +70,12 @@ class ClassiStar(object):
 			 .
 			 .
 			}
-		
+
 		Raise:
 			Exception: Uncaught exception.
-		""" 	
+		"""
 		pass
 
-	def __del__(self, arg):
+	def __del__(self, **arg):
 		# Get rid of all temp objects and files (if is required)
 		pass
