@@ -4,7 +4,7 @@ a WebSocket using websocket-client library
 Also requires libsvm-3.17
 """
 
-__author__ = "Nico, Mati"
+__author__ = "Nicolas, Matias"
 __version__ = "0.1"
 
 import websocket # v0.11.0
@@ -26,6 +26,10 @@ def on_message(ws, message):
     try:
         j_obj = json.loads(message.strip())
         print j_obj["userid"]
+
+        # TODO: Fetch the files
+        # TODO: Classify the object
+
     except Exception:
         print message
 
