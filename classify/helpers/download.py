@@ -13,12 +13,10 @@ from utils import wait
 SpectrumQueryUrl = "http://api.sdss3.org/spectrumQuery"
 IDQueryUrl = "http://api.sdss3.org/spectrum"
 
-# Example params: ?&limit=5&ra=159.815d&dec=-0.655&radius=900
-
 RETRIES = 1
 
 RA_range = (0.0, 360.0)
-DEC_range = (-30.0, 30.0)
+DEC_range = (-90.0, 90.0)
 RADIUS_range = (0, 1800)
 
 _get_ra = lambda *x: random.uniform(*RA_range)
@@ -27,7 +25,9 @@ _get_radius = lambda *x: random.uniform(*RADIUS_range)
 
 
 def get_ids(ra, dec, radius, limit=None):
+	"""Get ids from sdss API"""
 
+	# Example params: ?&limit=5&ra=159.815d&dec=-0.655&radius=900
 	params = {
 	    'ra': str(ra) + 'd',
 	    'dec': dec,
@@ -53,10 +53,10 @@ def get_ids(ra, dec, radius, limit=None):
 
 	return []
 
+# TODO: Download json files
+
+
 if __name__ == '__main__':
-	# limit=5&ra=159.815d&dec=-0.655&radius=900
 	for _ in xrange(0, RETRIES):
 		print get_ids(_get_ra(), _get_dec(), _get_radius(), 5)
 		wait()
-
-
