@@ -5,6 +5,16 @@ __version__ = "0.1"
 
 
 class LinealFeatures(object):
+	"""Lineal features id representation
+	
+	This class have the lineal features.
+	"""
+
+	def get(self, name):
+		"""getter helper"""
+
+		return self.__getattribute__(name)
+
 	score     = 0
 	wavemax   = 1
 	elodie_bv = 2
@@ -51,6 +61,11 @@ class PolinomialFeatures(object):
 
 	"""
 	
+	def get(self, name):
+		"""getter helper"""
+
+		return self.__getattribute__(name)
+
 	spectrosynflux 		= 30
 	offsetdec 			= 40
 	modelflux_ivar 		= 50
