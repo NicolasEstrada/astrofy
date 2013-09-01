@@ -17,9 +17,9 @@ from utils import logger
 EXT = '.json'
 
 if 'ASTROFY_HOME' in os.environ:
-    DOWNLOAD_PATH = os.environ['ASTROFY_HOME'] + '/data/'
+    DOWNLOAD_PATH = os.environ['ASTROFY_HOME'] + 'data/'
 else:
-    DOWNLOAD_PATH = './data'
+    DOWNLOAD_PATH = './data/'
 
 SpectrumQueryUrl = "http://api.sdss3.org/spectrumQuery"
 IDQueryUrl = "http://api.sdss3.org/spectrum"
