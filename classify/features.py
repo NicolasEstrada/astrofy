@@ -4,17 +4,25 @@ __author__ = "Nicolas, Matias"
 __version__ = "0.1"
 
 
-class LinealFeatures(object):
-	"""Lineal features id representation
-	
-	This class have the lineal features.
-	"""
+class Feature(object):
+	"""Feature class
+
+	Generic Feature class"""
+
+	def __init__(self):
+		super(Feature, self).__init__()
 
 	def get(self, name):
 		"""getter helper"""
 
 		return self.__getattribute__(name)
 
+
+class LinealFeatures(Feature):
+	"""Lineal features id representation
+	
+	This class have the lineal features.
+	"""
 	score     = 0
 	wavemax   = 1
 	elodie_bv = 2
@@ -37,7 +45,7 @@ class LinealFeatures(object):
 	objc_flags= 19
 	dof       = 20
 
-class PolinomialFeatures(object):
+class PolinomialFeatures(Feature):
 	"""Polinomial or multi-dimension features
 
 	Band Order:
@@ -60,11 +68,6 @@ class PolinomialFeatures(object):
 	cmodelmag -> i = 401
 
 	"""
-	
-	def get(self, name):
-		"""getter helper"""
-
-		return self.__getattribute__(name)
 
 	spectrosynflux 		= 30
 	offsetdec 			= 40
