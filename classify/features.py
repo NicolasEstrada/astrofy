@@ -69,6 +69,19 @@ class PolinomialFeatures(Feature):
 
 	"""
 
+	indexes = {
+		"i" : 1,
+		"r" : 2,
+		"u" : 3,
+		"z" : 4,
+		"g" : 5
+	}
+
+	def band(self, name):
+		"""Band index getter helper"""
+
+		return self.indexes[name]
+
 	spectrosynflux 		= 30
 	offsetdec 			= 40
 	modelflux_ivar 		= 50
