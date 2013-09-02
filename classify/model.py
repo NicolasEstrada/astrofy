@@ -20,15 +20,48 @@ else:
     TRAINING_SET_PATH = './set/training.set'
     MODEL_PATH = './model/model.svm'
 
+
 def generate_model(training_path=TRAINING_SET_PATH, model_path=MODEL_PATH):
+    """Generate the base model for clasification
+
+    Save the generated model into the destination path
+
+    Args:
+        training_path: absolute or relative path to the training set
+        model_path: absolute or relative path to the model file
+    
+    Returns:
+        None
+    
+    Raise:
+        Exception: Uncaught exception.
+    """
+
     logger.info("Generating the svm model")
     y, x = svm_read_problem(training_path)
     model = svm_train(y[:200], x[:200], '-c 4')
     svm_save_model(model_path, model)
 
+
 def load_model(model_path=MODEL_PATH):
+    """Loads the model
+
+    Loads the svm model generated with the training set.
+
+    Args:
+        model_path: absolute or relative path to the model file
+    
+    Returns:
+        SVM model object
+    
+    Raise:
+        Exception: Uncaught exception.
+    """
+
     logger.info("Generating the svm model")
+
     return svm_load_model(model_path)
+
 
 if __name__ == '__main__':
     generate_model()
