@@ -11,6 +11,7 @@ import os
 import simplejson as json
 
 from utils import logger
+from utils import get_file_names
 from features import LinealFeatures
 from features import SDSSObjectTypes
 from features import PolinomialFeatures
@@ -30,18 +31,6 @@ if 'ASTROFY_HOME' in os.environ:
 else:
     SOURCE_PATH = './data/'
     DESTINATION_PATH = './set/'
-
-
-def get_file_names():
-    """inspect the source folder and return all the available file paths."""
-    logger.info("Getting the files names")
-
-    files = set()
-    for file_name in os.listdir(SOURCE_PATH):
-        if file_name.endswith(".json"):
-            files.add(SOURCE_PATH + file_name)
-    return files
-
 
 def extract(file_path_list):
     """Extracts the (json) raw content of a given file"""
@@ -105,7 +94,7 @@ def generate(stream, total):
 if __name__ == '__main__':
     logger.info("Generating the training set")
 
-    file_names = get_file_names()
+    file_names = get_file_names(SOURCE_PATH)
     total = len(file_names)
 
     generate(extract(file_names), total)
