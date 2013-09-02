@@ -6,7 +6,6 @@ __author__ = "Nicolas, Matias"
 __version__ = "0.1"
 
 import os
-import subprocess
 
 from utils import logger
 
