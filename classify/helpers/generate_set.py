@@ -75,9 +75,9 @@ def generate(stream, total):
             if obj_type != None:
                 for key, value in j_obj.items():
                     if key in PF_FIELDS:
-                        features_list.extend(pf.get(key, obj_type, value))
+                        features_list.extend(pf.get(key, value))
                     elif key in LF_FIELDS:
-                        features_list.extend(lf.get(key, obj_type, value))
+                        features_list.extend(lf.get(key, value))
 
                 line_to_write = BASE.format(
                     obj_type=obj_type,
