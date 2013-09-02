@@ -13,11 +13,13 @@ from helpers.utils import logger
 
 from libs.libsvm.python.svmutil import *
 
+TRAINING_OFFSET = 1000
+
 if 'ASTROFY_HOME' in os.environ:
-    TRAINING_SET_PATH = os.environ['ASTROFY_HOME'] + 'set/training.set'
+    TRAINING_SET_PATH = os.environ['ASTROFY_HOME'] + 'set/training_scale.set'
     MODEL_PATH = os.environ['ASTROFY_HOME'] + 'model/model.svm'
 else:
-    TRAINING_SET_PATH = './set/training.set'
+    TRAINING_SET_PATH = './set/training_scale.set'
     MODEL_PATH = './model/model.svm'
 
 
@@ -39,7 +41,7 @@ def generate_model(training_path=TRAINING_SET_PATH, model_path=MODEL_PATH):
 
     logger.info("Generating the svm model")
     y, x = svm_read_problem(training_path)
-    model = svm_train(y[:200], x[:200], '-c 4')
+    model = svm_train(y[:TRAINING_OFFSET], x[:TRAINING_OFFSET], '-c 4')
     svm_save_model(model_path, model)
 
 
@@ -68,4 +70,9 @@ if __name__ == '__main__':
 
     model = load_model()
     y, x = svm_read_problem(TRAINING_SET_PATH)
-    p_label, p_acc, p_val = svm_predict(y[230:400], x[230:400], model)
+    p_label, p_acc, p_val = svm_predict(
+        y[TRAINING_OFFSET:], x[TRAINING_OFFSET:], model)
+
+    print p_val
+    print p_acc
+    print p_label

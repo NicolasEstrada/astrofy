@@ -70,7 +70,7 @@ def generate(stream, total):
 
             # Get object type (objc_type) and evaluate for be used as a 
             # training set element.
-            obj_type =sot.get_svm_class(j_obj['objc_type'])
+            obj_type = sot.get_svm_class(j_obj['objc_type'])
 
             if obj_type != None:
                 for key, value in j_obj.items():
