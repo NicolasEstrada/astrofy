@@ -41,4 +41,5 @@ classify/helpers/log/
 data/
 set/
 model/
+test/
 classify/log/
