@@ -118,3 +118,8 @@ class ClassiStar(object):
 	def __del__(self, **arg):
 		# Get rid of all temp objects and files (if is required)
 		pass
+
+if __name__ == '__main__':
+	cs = ClassiStar()
+
+	cs.Classify()
