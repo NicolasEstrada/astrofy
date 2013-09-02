@@ -84,7 +84,7 @@ def generate(stream, total):
                 )
 
                 # Writing a valid line into the training file
-                dest_file.writeline(line_to_write)
+                dest_file.write(line_to_write + '\n')
 
             else:
                 # Logging unknown objects
