@@ -11,7 +11,11 @@ import os
 
 from helpers.utils import logger
 
-from libs.libsvm.python.svmutil import *
+from libs.libsvm.python.svmutil import svm_train
+from libs.libsvm.python.svmutil import svm_predict
+from libs.libsvm.python.svmutil import svm_load_model
+from libs.libsvm.python.svmutil import svm_save_model
+from libs.libsvm.python.svmutil import svm_read_problem
 
 TRAINING_OFFSET = 1000
 
@@ -41,7 +45,7 @@ def generate_model(training_path=TRAINING_SET_PATH, model_path=MODEL_PATH):
 
     logger.info("Generating the svm model")
     y, x = svm_read_problem(training_path)
-    model = svm_train(y[:TRAINING_OFFSET], x[:TRAINING_OFFSET], '-c 4')
+    model = svm_train(y[:TRAINING_OFFSET], x[:TRAINING_OFFSET], '-c 4 -q')
     svm_save_model(model_path, model)
 
 
@@ -71,8 +75,6 @@ if __name__ == '__main__':
     model = load_model()
     y, x = svm_read_problem(TRAINING_SET_PATH)
     p_label, p_acc, p_val = svm_predict(
-        y[TRAINING_OFFSET:], x[TRAINING_OFFSET:], model)
+        [y[-1]], [x[-1]], model, options="-q")
 
-    print p_val
-    print p_acc
-    print p_label
+    print p_label, p_acc, p_val
