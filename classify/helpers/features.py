@@ -4,6 +4,7 @@ __author__ = "Nicolas, Matias"
 __version__ = "0.1"
 
 
+
 class Feature(object):
 	"""Feature class
 
@@ -16,7 +17,7 @@ class Feature(object):
 
 	def __getattribute__(self, name):
 		try:
-			object.__getattribute__(self, name)
+			return object.__getattribute__(self, name)
 		except AttributeError:
 			return None
 
@@ -27,17 +28,22 @@ class Feature(object):
 
 		if attr != None:
 			return self.convert(attr, obj_type, value)
-		else:
-			return []
+
+		return []
 
 	def convert(self):
 		raise NotImplementedError
+
 
 class LinealFeatures(Feature):
 	"""Lineal features id representation
 	
 	This class have the lineal features.
 	"""
+
+	def __init__(self):
+		super(LinealFeatures, self).__init__()
+
 	score     = 0
 	wavemax   = 1
 	elodie_bv = 2
@@ -91,6 +97,9 @@ class PolinomialFeatures(Feature):
 
 	"""
 
+	def __init__(self):
+		super(PolinomialFeatures, self).__init__()
+
 	indexes = {
 		"i" : 1,
 		"r" : 2,
@@ -103,6 +112,30 @@ class PolinomialFeatures(Feature):
 		"""Band index getter helper"""
 
 		return self.indexes[name]
+
+	def convert(self, attr, obj_type, values):
+		"""Convert the feature in a svm valid feature string
+
+		Example of values:
+		astrobj['cmodelmag'] = 
+		{
+		'i': 16.569,
+		'r': 17.058,
+		'u': 19.5772,
+		'z': 16.2163,
+		'g': 18.3169}
+		"""
+		# We return a iterable to extend the final features list
+		features = []
+
+		for band, value in values.items():	
+			features.append(self.FEATURE.format(
+				feature=attr + self.band(band),
+				value=value)
+			)
+
+
+		return features
 
 	spectrosynflux 		= 30
 	offsetdec 			= 40
@@ -163,30 +196,6 @@ class PolinomialFeatures(Feature):
 	devflux 			= 590
 	q 					= 600
 	u 					= 610
-
-	def convert(self, attr, obj_type, values):
-		"""Convert the feature in a svm valid feature string
-
-		Example of values:
-		astrobj['cmodelmag'] = 
-		{
-		'i': 16.569,
-		'r': 17.058,
-		'u': 19.5772,
-		'z': 16.2163,
-		'g': 18.3169}
-		"""
-		# We return a iterable to extend the final features list
-		features = []
-
-		for band, value in values.items():	
-			features.append(self.FEATURE.format(
-				feature=attr + self.band(band),
-				value=value)
-			)
-
-
-		return features
 
 
 class SDSSObjectTypes(object):

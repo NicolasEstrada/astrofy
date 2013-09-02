@@ -22,7 +22,7 @@ pf = PolinomialFeatures()
 
 DELIMITER = ' '
 BASE = "{type}{delimiter}{features}"
-TRAINING_SET_FILE_NAME = 'trainnig.set'
+TRAINING_SET_FILE_NAME = 'training.set'
 
 if 'ASTROFY_HOME' in os.environ:
     SOURCE_PATH = os.environ['ASTROFY_HOME'] + 'data/'
@@ -103,4 +103,4 @@ if __name__ == '__main__':
     file_names = get_file_names()
     total = len(file_names)
 
-    generate(extract(file_names, total))
+    generate(extract(file_names), total)
