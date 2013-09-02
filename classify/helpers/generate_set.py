@@ -59,6 +59,8 @@ def extract(file_path_list):
 def generate(stream, total):
     logger.info("Generating the data set")
 
+    #We keep a variable counter for the unknowns objects
+    unknown = 0
     # We open the training file in 'a' mode to append the data to the file
     # And also to avoid overwrite the file an lose data
     with open(DESTINATION_PATH + TRAINING_SET_FILE_NAME, 'a') as dest_file:
@@ -88,14 +90,17 @@ def generate(stream, total):
 
             else:
                 # Logging unknown objects
+                unknown += 1
                 unknown_type = j_obj['objc_type']
-                logger.info("Unknown object id {}:{}".format(
+                logger.debug("Unknown object id {}:{}".format(
                     unknown_type,
                     sot.indexes[unknown_type])
                 )
 
-        if n % 10 == 0:
-            logger.info("Processing object {}/{}".format(n, total))
+            if n % 100 == 0:
+                logger.info("Processing object {}/{}".format(n, total))
+
+    logger.critical("Unknown objects: {}/{}".format(unknown, total))
 
 if __name__ == '__main__':
     logger.info("Generating the training set")
