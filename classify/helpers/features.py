@@ -70,7 +70,9 @@ class LinealFeatures(Feature):
 		"""Convert the feature in a svm valid feature string"""
 
 		# We return a iterable to extend the final features list
-		return (self.FEATURE.format(feature=attr, value=value), )
+		if not isinstance(value, dict):
+			return (self.FEATURE.format(feature=attr, value=value), )
+		return ()
 
 
 class PolinomialFeatures(Feature):
