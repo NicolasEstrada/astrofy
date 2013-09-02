@@ -21,7 +21,7 @@ sot = SDSSObjectTypes()
 pf = PolinomialFeatures()
 
 DELIMITER = ' '
-BASE = "{type}{delimiter}{features}"
+BASE = "{obj_type}{delimiter}{features}"
 TRAINING_SET_FILE_NAME = 'training.set'
 
 if 'ASTROFY_HOME' in os.environ:
