@@ -40,3 +40,4 @@ nosetests.xml
 classify/helpers/log/
 data/
 set/
+images/
