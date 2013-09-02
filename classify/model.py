@@ -58,7 +58,7 @@ def load_model(model_path=MODEL_PATH):
         Exception: Uncaught exception.
     """
 
-    logger.info("Generating the svm model")
+    logger.info("Loading the svm model")
 
     return svm_load_model(model_path)
 

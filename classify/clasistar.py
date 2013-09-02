@@ -6,9 +6,7 @@ __version__ = "0.1"
 
 import json
 
-from libs.libsvm.python.svmutil import svm_load_model
-
-FILE_MODEL_PATH = "/path/to/model"
+from model import load_model
 
 
 class ClassiStar(object):
@@ -25,7 +23,7 @@ class ClassiStar(object):
 		.
 	"""
 
-	def __init__(self, model_path=FILE_MODEL_PATH):
+	def __init__(self, model_path=None):
 		"""initiaze object parameters.
 
 		Args:
@@ -45,7 +43,7 @@ class ClassiStar(object):
 		self.objid = "1237654669203079226"
 
 		self._get_object()
-		# self._load_model(model_path)
+		self._load_model(model_path)
 
 	def _load_model(self, file_path):
 		"""Loads the model
@@ -62,7 +60,7 @@ class ClassiStar(object):
 			Exception: Uncaught exception.
 		"""
 
-		self.model = svm_load_model(file_path)
+		self.model = load_model()
 		return True
 
 
