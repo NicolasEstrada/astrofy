@@ -9,14 +9,29 @@ class Feature(object):
 
 	Generic Feature class"""
 
+	FEATURE = "{feature}:{value}"
+
 	def __init__(self):
 		super(Feature, self).__init__()
 
-	def get(self, name):
+	def __getattribute__(self, name):
+		try:
+			object.__getattribute__(self, name)
+		except AttributeError:
+			return None
+
+	def get(self, name, obj_type, value):
 		"""getter helper"""
 
-		return self.__getattribute__(name)
+		attr = self.__getattribute__(name)
 
+		if attr != None:
+			return self.convert(attr, obj_type, value)
+		else:
+			return []
+
+	def convert(self):
+		raise NotImplementedError
 
 class LinealFeatures(Feature):
 	"""Lineal features id representation
@@ -44,6 +59,13 @@ class LinealFeatures(Feature):
 	objc_rowc = 18
 	objc_flags= 19
 	dof       = 20
+
+	def convert(self, attr, obj_type, value):
+		"""Convert the feature in a svm valid feature string"""
+
+		# We return a iterable to extend the final features list
+		return (self.FEATURE.format(attr, value), )
+
 
 class PolinomialFeatures(Feature):
 	"""Polinomial or multi-dimension features
@@ -141,3 +163,138 @@ class PolinomialFeatures(Feature):
 	devflux 			= 590
 	q 					= 600
 	u 					= 610
+
+	def convert(self, attr, obj_type, values):
+		"""Convert the feature in a svm valid feature string
+
+		Example of values:
+		astrobj['cmodelmag'] = 
+		{
+		'i': 16.569,
+		'r': 17.058,
+		'u': 19.5772,
+		'z': 16.2163,
+		'g': 18.3169}
+		"""
+		# We return a iterable to extend the final features list
+		features = []
+
+		for band, value in values.items():	
+			features.append(self.FEATURE.format(
+				feature=attr + self.band(band),
+				value=value)
+			)
+
+
+		return features
+
+
+class SDSSObjectTypes(object):
+	"""docstring for SDSSObjectTypes"""
+	def __init__(self):
+		super(SDSSObjectTypes, self).__init__()
+
+	indexes = {
+		0: "Unknown",
+		1: "Cosmic Ray",
+		2: "Defect",
+		3: "Galaxy",
+		4: "Ghost",
+		5: "Known object",
+		6: "Star",
+		7: "Star trail",
+		8: "Sky"}
+
+	# We have 2 classes (Star and Galaxy) for the SVM
+	svm_classes = {
+		3: -1,
+		6: 1}
+
+	def get_svm_class(self, obj_type):
+		"""Getter helper to get the svm class"""
+		return self.svm_classes.get(int(obj_type))
+
+
+LF_FIELDS = [
+	'score',
+	'wavemax',
+	'elodie_bv',
+	'rchi2',
+	'rchi2diff',
+	'colvdeg',
+	'chi68p',
+	'sn_median',
+	'vdispdof',
+	'score',
+	'objc_colc',
+	'z',
+	'wavemin',
+	'wavemax',
+	'vdisp',
+	'b',
+	'vdispchi2',
+	'vdispnpix',
+	'objc_rowc',
+	'objc_flags',
+	'dof']
+
+PF_FIELDS =[
+	'spectrosynflux',
+	'offsetdec',
+	'modelflux_ivar',
+	'colc',
+	'spectroflux_ivar',
+	'flags2',
+	'm_cr4',
+	'fracdev',
+	'rowc',
+	'aperflux',
+	'star_lnl',
+	'petroflux',
+	'petroth50',
+	'nmgypercount',
+	'spectrosynflux_ivar',
+	'expflux',
+	'petromag',
+	'theta_exp',
+	'psfflux_ivar',
+	'dev_lnl',
+	'm_e2',
+	'm_e1',
+	'psfmag',
+	'airmass',
+	'modelflux',
+	'm_rr_cc_psf',
+	'spec2',
+	'fiberflux',
+	'spec1',
+	'spectroflux',
+	'skyflux',
+	'offsetra',
+	'ab_dev',
+	'psf_fwhm',
+	'petrotheta',
+	'phi_offset',
+	'modelmag',
+	'cmodelmag',
+	'm_e2_psf',
+	'ab_exp',
+	'devflux_ivar',
+	'fiber2flux',
+	'm_e1_psf',
+	'spectroskyflux',
+	'petroth9',
+	'expmag',
+	'phi_exp_deg',
+	'phi_dev_deg',
+	'extinction',
+	'cmodelflux',
+	'fiber2mag',
+	'm_cr4_psf',
+	'profmean_nmgy',
+	'exp_lnl',
+	'theta_dev',
+	'm_rr_cc',
+	'devflux',
+	'q',
+	'u']
