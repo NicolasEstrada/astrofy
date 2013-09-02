@@ -39,3 +39,4 @@ nosetests.xml
 #logs
 classify/helpers/log/
 data/
+set/
