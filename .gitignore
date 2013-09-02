@@ -40,3 +40,5 @@ nosetests.xml
 classify/helpers/log/
 data/
 set/
+model/
+classify/log/
