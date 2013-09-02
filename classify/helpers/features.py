@@ -221,9 +221,18 @@ class SDSSObjectTypes(object):
 		3: -1,
 		6: 1}
 
+	sdss_classes = {
+		-1: 3,
+		1: 6}
+
+
 	def get_svm_class(self, obj_type):
 		"""Getter helper to get the svm class"""
 		return self.svm_classes.get(int(obj_type))
+
+	def get_sdss_class(self, obj_type):
+		"""Getter helper to get the sdss class"""
+		return self.sdss_classes.get(int(obj_type))
 
 
 LF_FIELDS = [
