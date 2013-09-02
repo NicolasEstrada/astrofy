@@ -7,6 +7,7 @@ __version__ = "0.1"
 
 import os
 import random
+import argparse
 import requests
 
 import simplejson as json
@@ -23,8 +24,6 @@ else:
 
 SpectrumQueryUrl = "http://api.sdss3.org/spectrumQuery"
 IDQueryUrl = "http://api.sdss3.org/spectrum"
-
-RETRIES = 1
 
 RA_range = (0.0, 360.0)
 DEC_range = (-90.0, 90.0)
@@ -97,8 +96,22 @@ def download_files(ids, format='json'):
 	logger.info("Download finished")
 
 if __name__ == '__main__':
-	for retry in xrange(0, RETRIES):
+
+	parser = argparse.ArgumentParser(
+		prog='./download', description='Download files from sdss')
+	parser.add_argument(
+		'-a', type=int, default=1,
+		help='Number of attempts (default: 1)')
+	parser.add_argument('-l', default=10,
+        help='Limit of files (default: 10)')
+
+	args = parser.parse_args()
+
+	retries = args.a
+	limit = args.l
+
+	for retry in xrange(0, retries):
 		logger.info("Attempt {0}".format(retry))
-		ids = get_ids(_get_ra(), _get_dec(), _get_radius(), 50)
+		ids = get_ids(_get_ra(), _get_dec(), _get_radius(), limit)
 		wait(logger)
 		download_files(ids)
