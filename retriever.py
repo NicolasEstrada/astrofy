@@ -27,7 +27,7 @@ CLASSIFY_THRESHOLD = 10
 
 client = pymongo.MongoClient("localhost", 27017)
 db = client.test
-db.objects.ensure_index([('id', 1)])
+db.results.ensure_index([('id', 1)])
 
 
 class PikaClient(object):
@@ -160,7 +160,9 @@ class PikaClient(object):
                 elif data['event'] == 4:
                     # Object processed by a client
                     data['classified'] += 1
-                    db.results.update({"_id": ObjectId(data['_id'])}, data)
+                    data['_id'] = ObjectId(data['_id'])
+                    db.results.update({"_id": ObjectId(data['_id'])}, data, True)
+                    data['_id'] = str(ObjectId(data['_id']))
                     if data['classified'] < CLASSIFY_THRESHOLD:
                         data['event'] = 0
                         self.publish_image(
