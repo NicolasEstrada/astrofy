@@ -9,11 +9,13 @@ __author__ = "Nicolas, Matias"
 __version__ = "0.2"
 
 import argparse
-import websocket
+# import websocket
 
 from helpers.utils import json
 from helpers.utils import logger
 from clasistar import ClassiStar
+
+from websocket import create_connection
 
 
 """ INPUT JSON format (from WebSocket)
@@ -50,7 +52,7 @@ from clasistar import ClassiStar
 
 """
 
-def on_message(ws, message):
+def main(url):
     """Callback method on incoming messages
 
     Receive a incoming message for the classification process.
@@ -66,50 +68,50 @@ def on_message(ws, message):
     Raise:
         Exception: Uncaught exception."""
 
-    j_obj = json.loads(message.strip())
 
-    obj_data = j_obj['object_data']
+    ws = create_connection(url)
 
-    logger.info("RCVD: {}".format(obj_data["spectrumID"])) 
+    while True:
+        message =  ws.recv()
 
-    cs = ClassiStar(obj_data)
+        if not message:
+            continue
 
-    predicted_type, extra = cs.classify()
+        j_obj = json.loads(message)
 
-    j_obj["type"] = predicted_type
-    j_obj["application"] = "AUTO"
-    j_obj["level"] = "AUTO"
-    j_obj["event"] = 100
-    j_obj["clientid"] = "AUTO"
-    j_obj["extra_data"] = extra
+        obj_data = j_obj['object_data']
 
-    # Sending response (writing to the websocket)
-    ws.write(json.dumps(j_obj))
-    logger.info("SEND: {}".format(obj_data["spectrumID"])) 
+        logger.info("RCVD: {}".format(obj_data["spectrumID"])) 
 
-def on_error(ws, error):
-    print error
+        cs = ClassiStar(obj_data)
+
+        predicted_type, extra = cs.classify()
+
+        j_obj["type"] = predicted_type
+        j_obj["application"] = "AUTO"
+        j_obj["level"] = "AUTO"
+        j_obj["event"] = 100
+        j_obj["clientid"] = "AUTO"
+        j_obj["extra_data"] = extra
+
+        # Sending response (writing to the websocket)
+        ws.send(json.dumps(j_obj))
+        logger.info("SEND: {}".format(obj_data["spectrumID"])) 
+
+    ws.close()
 
 
-def on_close(ws):
-    print "### closed ###"
+# def run(listen_url):
+#     # websocket.enableTrace(True)
 
+#     ws = websocket.WebSocketApp(
+#         listen_url,
+#         on_message = on_message,
+#         on_error = on_error,
+#         on_close = on_close)
 
-def on_open(ws):
-    pass
-
-
-def run(listen_url):
-    # websocket.enableTrace(True)
-
-    ws = websocket.WebSocketApp(
-        listen_url,
-        on_message = on_message,
-        on_error = on_error,
-        on_close = on_close)
-
-    ws.on_open = on_open
-    ws.run_forever()
+#     ws.on_open = on_open
+#     ws.run_forever()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -133,4 +135,4 @@ if __name__ == "__main__":
 
     logger.info("Listening on {}".format(url_str))
 
-    run(url_str)
+    main(url_str)
