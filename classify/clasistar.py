@@ -211,6 +211,9 @@ if __name__ == '__main__':
     for n, file_path in enumerate(get_file_names(TEST_PATH), start=1):
         cs = ClassiStar(file_path)
 
+        if cs.obj_json['objc_type'] not in [3, 6]:
+            continue
+
         results.append(cs.classify())
 
         if n % 5 == 0:
