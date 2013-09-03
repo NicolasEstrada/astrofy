@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 """This is a module that consume object desctiptions from
 a WebSocket using websocket-client library
 (github.com/liris/websocket-client v0.11.0)
@@ -9,13 +9,10 @@ __author__ = "Nicolas, Matias"
 __version__ = "0.2"
 
 import argparse
-# import websocket
+import websocket
 
 from helpers.utils import json
-from helpers.utils import logger
 from clasistar import ClassiStar
-
-from websocket import create_connection
 
 
 """ INPUT JSON format (from WebSocket)
@@ -52,7 +49,7 @@ from websocket import create_connection
 
 """
 
-def main(url):
+def on_message(ws, message):
     """Callback method on incoming messages
 
     Receive a incoming message for the classification process.
@@ -68,50 +65,47 @@ def main(url):
     Raise:
         Exception: Uncaught exception."""
 
+    j_obj = json.loads(message.strip())
 
-    ws = create_connection(url)
+    obj_data = j_obj['object_data']
 
-    while True:
-        message =  ws.recv()
+    cs = ClassiStar(obj_data)
 
-        if not message:
-            continue
+    predicted_type, extra = cs.classify()
 
-        j_obj = json.loads(message)
+    j_obj["type"] = predicted_type
+    j_obj["application"] = "AUTO"
+    j_obj["level"] = "AUTO"
+    j_obj["event"] = 100
+    j_obj["clientid"] = "AUTO"
+    j_obj["extra_data"] = extra
 
-        obj_data = j_obj['object_data']
+    # Sending response (writing to the websocket)
+    ws.write(json.dumps(j_obj))
 
-        logger.info("RCVD: {}".format(obj_data["spectrumID"])) 
-
-        cs = ClassiStar(obj_data)
-
-        predicted_type, extra = cs.classify()
-
-        j_obj["type"] = predicted_type
-        j_obj["application"] = "AUTO"
-        j_obj["level"] = "AUTO"
-        j_obj["event"] = 100
-        j_obj["clientid"] = "AUTO"
-        j_obj["extra_data"] = extra
-
-        # Sending response (writing to the websocket)
-        ws.send(json.dumps(j_obj))
-        logger.info("SEND: {}".format(obj_data["spectrumID"])) 
-
-    ws.close()
+def on_error(ws, error):
+    print error
 
 
-# def run(listen_url):
-#     # websocket.enableTrace(True)
+def on_close(ws):
+    print "### closed ###"
 
-#     ws = websocket.WebSocketApp(
-#         listen_url,
-#         on_message = on_message,
-#         on_error = on_error,
-#         on_close = on_close)
 
-#     ws.on_open = on_open
-#     ws.run_forever()
+def on_open(ws):
+    pass
+
+
+def run(listen_url):
+    websocket.enableTrace(True)
+
+    ws = websocket.WebSocketApp(
+        listen_url,
+        on_message = on_message,
+        on_error = on_error,
+        on_close = on_close)
+
+    ws.on_open = on_open
+    ws.run_forever()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -119,20 +113,15 @@ if __name__ == "__main__":
         description='WebSocket Hook for the automatic classifier')
 
     parser.add_argument(
-        '-u', type=str, default='127.0.0.1',
-        help='Listening Url (default: 127.0.0.1)')
-    parser.add_argument('-p', type=str, default='80',
-        help='Listening port (default: 80)')
+        '-u', type=str, default='localhost',
+        help='Listening Url (default: localhost)')
+    parser.add_argument('-p', type=str, default='8888',
+        help='Listening port (default: 8888)')
 
     args = parser.parse_args()
 
     url = args.u
     port = args.p
 
-    url_str = "{}:{}/"
-
-    url_str = url_str.format(url, port)
-
-    logger.info("Listening on {}".format(url_str))
-
-    main(url_str)
+    url_str = "ws://{}:{}/ws_clasistar"
+    run(url_str.format(url, port))
