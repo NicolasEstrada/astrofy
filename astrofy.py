@@ -203,15 +203,25 @@ class PikaClient(object):
         #     }
         # )
 
-        data['event'] = 4  # Event for client classification
-        data['clientid'] = id(self)
-        self.channel.basic_publish(
-            exchange='astrofy',
-            routing_key='astrofy.retriever.{0}'.format(
-                data['classified']),
-            body = json.dumps(data),
-            properties=properties
-        )
+        if data['event'] == 100:
+            self.channel.basic_publish(
+                exchange='astrofy',
+                routing_key='astrofy.retriever.{0}'.format(
+                    data['classified']),
+                body = json.dumps(data),
+                properties=properties
+            )
+        else:
+            data['event'] = 4  # Event for client classification
+            if not 'clientid' in data:
+                data['clientid'] = id(self)
+            self.channel.basic_publish(
+                exchange='astrofy',
+                routing_key='astrofy.retriever.{0}'.format(
+                    data['classified']),
+                body = json.dumps(data),
+                properties=properties
+            )
 
 
     def new_client(self, client_id=None):

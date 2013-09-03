@@ -122,6 +122,7 @@ class PikaClient(object):
             send_to = self.get_client(data['id'])
             if send_to:
                 # Normal message
+                data['clientid'] = send_to
                 msg = (" Image source(URL): {0},\n Path: {1},\n "
                        "Object_path: {2},\n Classified: {3}".format(
                             data['source'],
