@@ -158,10 +158,9 @@ class PikaClient(object):
                         data['classified']
                     )
             )
-            # self.websocket.write_message(
-            #     json.dumps(data, sort_keys=True,
-            #     indent=4, separators=('<br/>', ': ')))
-            self.websocket.write_message(msg)
+            self.websocket.write_message(
+                json.dumps(data))
+            # self.websocket.write_message(msg)
         else:
             if data['clientid'] != id(self):
                 if not self.websocket.client_exists(data['clientid']):

@@ -164,8 +164,8 @@ class PikaClient(object):
                 self.publish_image(obj)
                 db.objects.update({"_id": obj_id}, {"$set": {"classified": -1}})
 
-                # wait(logger, 10, False)
-            wait(logger, 60, False)
+                wait(logger, 1, False)
+            wait(logger, 10, False)
 
 
 if __name__ == '__main__':

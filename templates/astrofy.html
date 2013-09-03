@@ -5,11 +5,35 @@
 
 <script type="text/javascript" src="/static/swfobject.js"> </script>
 
+<script type="text/javascript" src="/static/js/jquery-2.0.3.min.js"> </script>
+
+<style type="text/css">
+#wrap {
+   width:100%;
+   margin:0 auto;
+}
+#left_col {
+   float:left;
+   /* width:300px; */
+   width:30%;
+}
+#center_col {
+   float:left;
+   /* width:300px; */
+    width:30%;
+}
+#right_col {
+   float:right;
+   /* width:400px; */
+	width:40%;
+}
+</style>
 
 <script type="text/javascript">
 
 WEB_SOCKET_SWF_LOCATION = "/static/WebSocketMain.swf";
 
+var URL = 'ws://localhost:8888/ws_channel';
 
 function log(msg){
 
@@ -21,24 +45,39 @@ function log(msg){
 	// var time = hour + ":" + min + ":" + sec + ":" + msec;
 	// document.getElementById('chat_log').innerHTML += time + ": " + msg + "</br/>";
 	document.getElementById('chat_log').innerHTML += msg + "</br/>";
-}
+};
 
 
-function ws_init(url) {
+$(document).ready(function(){
+	var incoming_objects = new Array();
+	var current = null;
 
-	log("connecting to" + url + "...");
-	ws = new WebSocket(url);
+	log("connecting to" + URL + "...");
+	ws = new WebSocket(URL);
 	ws.onopen = function(){	
 			log("Connection established");
 		};
 	ws.onmessage = function(msg){
-			log("Image Received [ " + msg.data + " ]" );
+			//log("Image Received [ " + msg.data + " ]" );
+			//console.log(msg);
+			if($('#img_box').attr('status') == '1'){
+				current = JSON.parse(msg.data);
+				var keys = (current.path).split('/');
+				log("RCVD(show): " + keys[keys.length - 1]);
+				$('#img_box').attr('src', 'get_image/' + keys[keys.length - 1]);
+				$('#img_box').attr('status', '0');
+			}
+			else{
+				var stash = JSON.parse(msg.data);
+				var keys = (stash.path).split('/');
+				log("RCVD(stash): " + keys[keys.length - 1]);
+				incoming_objects.push();
+			}
 		};
 	ws.onclose = function(){
 			log("Connection Closed");
-		}
-
-}
+		};
+});
 
 function ws_send(msg){
 	log("Send Image: " + msg);
@@ -49,17 +88,26 @@ function ws_close(){
 	log("closing connection..");
 	ws.close();
 }
+
+function set_img_attr(value){
+	log("changing image");
+	$('#img_box').attr('src', value)
+}
+
+function classify(){
+	log("Sending classification");
+	// Send the classification
+}
 </script>
 
 </head>
 <body>
 <form name="input_form">
-	<table>
+	<!--<table>
 		<tr>
 			<td> Host/Resource: </td>
 			<td> <input type="text" name="host" size="50" value="ws://localhost:8888/ws_channel"> </td>
 			<td> <input type="button" value="connect" onclick="ws_init(document.input_form.host.value)"> </td>
-			<td> <input type="button" value="close" onclick="ws_close()"></td>
 
 		</tr>
 
@@ -68,9 +116,55 @@ function ws_close(){
 			<td> <input type="button" value="send" onclick="ws_send(document.input_form.msg.value)"> </td>
 		</tr>
 
-	</table>
-</form>
+	</table>-->
 
-<div id="chat_log"> </div>
+<!-- <table display="inline">
+<tr>
+	<td>
+	</td>
+	<div display="compact">
+	<h2>SDSS Image</h2>
+	<img id="img_box" border="0" src="get_image/samplejpg" alt="Pulpit rock" width="304" height="228">
+	</div>
+			
+<td >
+	<div width="300px" display="compact">
+		<input type="checkbox" name="starn" value="starv">Star<br>
+		<input type="checkbox" name="galaxyn" value="galaxyv">Galaxy<br>
+		<input type="checkbox" name="unkownn" value="unkownv">Unkown<br>
+	</div>
+</td>
+<div><td> <input type="button" value="Classify" onclick="classify()"></td></div>
+<div><td> <input type="button" value="Close" onclick="ws_close()"></td></div>
+<table>
+	<td>
+		<div id="chat_log"  display="inline">
+		<h2>Log Management System</h2>
+		 </div>		
+	</td>
+</table> -->
+<div id="wrap">
+	<div id="left_col">
+	<h2>Astrofy v0.1</h2>
+	<img id="img_box" border="0" src="get_image/sample.jpg" status="1" width="300" height="228">
+	</div>
+		
+	<div id="center_col">
+		<h2>Classify</h2>	
+		<input type="checkbox" name="starn" value="starv">Star<br>
+		<input type="checkbox" name="galaxyn" value="galaxyv">Galaxy<br>
+		<input type="checkbox" name="unkownn" value="unkownv">Unkown<br><br><br>
+		<td> <input type="button" value="Classify" onclick="classify()"></td>
+		<td> <input type="button" value="Close" onclick="ws_close()"></td>
+	</div>
+
+	<div id="right_col">
+		<div id="chat_log"  display="inline">
+		<h2>Log</h2>
+		</div>
+	 </div>		
+</div>	
+
+</form>
 </body>
 </html>
