@@ -122,21 +122,22 @@ function refresh(){
 }
 
 function classify(){
-	log("Sending classification");
+	var checked = $('.checkbox').filter(':checked');
 
-	var response ={
-        "id": current.id,
-        "type": 3,
-        "sdss_type":  current.object_data.objc_type,
-        "extra_data": {},
-        "source": "astrofy",
-        "level": "normal",
-        "clientid": current.clientid,
-        "creation_date": current.creation_date,
-        "start_date": current.start_date,
-        "event": 4,
-    	"classified": current.classified};
-    ws.send(JSON.stringify(response));
+	if (checked.length < 1){
+		alert("Please select 1 category");
+		return;
+	}
+
+
+    current["type"] = checked.val();
+    current["application"] = "astrofy";
+    current["level"] = "normal";
+    current["event"] = 4;
+
+    ws.send(JSON.stringify(current));
+
+    log("SEND: type: " + checked.val());
 
     refresh();
 }

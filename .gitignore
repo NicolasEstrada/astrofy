@@ -43,4 +43,5 @@ set/
 images/
 model/
 test/
+log/
 classify/log/
