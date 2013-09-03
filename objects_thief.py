@@ -14,7 +14,7 @@ from helpers.utils import wait
 from helpers.utils import logger
 
 RETRIES = 10
-THRESHOLD = 100
+THRESHOLD = 20
 
 if __name__ == '__main__':
 	while(True):

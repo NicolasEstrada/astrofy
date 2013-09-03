@@ -186,30 +186,32 @@ class PikaClient(object):
     def publish_image(self, ws_msg):
         properties = pika.BasicProperties(content_type="text/plain",delivery_mode=2)
 
-        data = json.dumps(
-            {
-                "source": "SDSS, DR{0}".format(random.randint(7, 10)),
-                "path": "/tmp/astrofy/images/{0}.fits".format(self.path_generator()),
-                "object_data": {
-                    "type": choice(["star", "galaxy", "unknown"]),
-                    "shape": random.randint(1, 20),
-                    "dec": random.randint(0, 360),
-                    "ra": random.randint(0, 90),
-                },
-                "classified": 0,
-                "event": 0,
-                "clientid": id(self)
-            }
-        )
+        data = json.loads(ws_msg)
+        # data = json.dumps(
+        #     {
+        #         "source": "SDSS, DR{0}".format(random.randint(7, 10)),
+        #         "path": "/tmp/astrofy/images/{0}.fits".format(self.path_generator()),
+        #         "object_data": {
+        #             "type": choice(["star", "galaxy", "unknown"]),
+        #             "shape": random.randint(1, 20),
+        #             "dec": random.randint(0, 360),
+        #             "ra": random.randint(0, 90),
+        #         },
+        #         "classified": 0,
+        #         "event": 0,
+        #         "clientid": id(self)
+        #     }
+        # )
 
-        if self.websocket.client_ids:
-            self.channel.basic_publish(
-                exchange='astrofy',
-                routing_key='astrofy.{0}'.format(
-                    choice(self.websocket.client_ids)),
-                body = data,
-                properties=properties
-            )
+        data['event'] = 4  # Event for client classification
+        data['clientid'] = id(self)
+        self.channel.basic_publish(
+            exchange='astrofy',
+            routing_key='astrofy.retriever.{0}'.format(
+                data['classified']),
+            body = json.dumps(data),
+            properties=properties
+        )
 
 
     def new_client(self, client_id=None):
