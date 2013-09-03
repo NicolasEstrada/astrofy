@@ -36,9 +36,14 @@ WEB_SOCKET_SWF_LOCATION = "/static/WebSocketMain.swf";
 var URL = 'ws://localhost:8888/ws_channel';
 var incoming_objects = new Array();
 var current = null;
+var log_count = 0;
 
 function log(msg){
-
+	log_count += 1;
+	if (log_count > 19){
+		document.getElementById('chat_log').innerHTML = msg + "</br/>";
+		log_count = 0;
+	}
 	// var d = new Date();
 	// var hour = d.getHours();
 	// var min = d.getMinutes();
@@ -163,8 +168,8 @@ function classify(){
 	</div>
 
 	<div class="right_col">
-		<div id="chat_log"  display="inline">
 		<h2>Log</h2>
+		<div id="chat_log">
 		</div>
 	 </div>		
 </div>	
