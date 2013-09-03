@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """This is a module that consume object desctiptions from
 a WebSocket using websocket-client library
 (github.com/liris/websocket-client v0.11.0)
@@ -10,8 +11,8 @@ __version__ = "0.2"
 import argparse
 import websocket
 
-from classify.helpers.utils import json
-from classify.clasistar import ClassiStar
+from helpers.utils import json
+from clasistar import ClassiStar
 
 
 """ INPUT JSON format (from WebSocket)
@@ -104,7 +105,7 @@ def run(listen_url):
     # websocket.enableTrace(True)
 
     ws = websocket.WebSocketApp(
-        "ws://echo.websocket.org/",
+        listen_url,
         on_message = on_message,
         on_error = on_error,
         on_close = on_close)
