@@ -1,4 +1,4 @@
-"""This is the server application to dispatch objects from feeders.
+"""This is the server application to retrive results objects from clients.
 """
 
 __author__ = "Matias, Nicolas"
@@ -22,6 +22,8 @@ from bson.objectid import ObjectId
 
 PORT = 8888
 
+CLASSIFY_THRESHOLD = 10
+
 
 client = pymongo.MongoClient("localhost", 27017)
 db = client.test
@@ -32,7 +34,7 @@ class PikaClient(object):
 
     def __init__(self):
         # Client queue has the class id as name
-        self.queue_name = "astrofy-feeder"
+        self.queue_name = "astrofy-retriever"
     
         # Conncetion values
         self.connected = False
@@ -101,7 +103,7 @@ class PikaClient(object):
         self.channel.queue_bind(
             exchange='astrofy',
             queue=self.queue_name,
-            routing_key='astrofy.dispatcher.#',
+            routing_key='astrofy.retriever.#',
             callback=self.on_queue_bound
         )
     
@@ -118,41 +120,57 @@ class PikaClient(object):
         data = json.loads(body)
 
         # New client notification
-        if not data['event']:
-            send_to = self.get_client(data['id'])
-            if send_to:
-                # Normal message
-                data['clientid'] = send_to
-                msg = (" Image source(URL): {0},\n Path: {1},\n "
-                       "Object_path: {2},\n Classified: {3}".format(
-                            data['source'],
-                            data['path'],
-                            data['object_path'],
-                            data['classified']
-                        )
-                )
-                print msg
-                # self.websocket.write_message(
-                #     json.dumps(data, sort_keys=True,
-                #     indent=4, separators=('<br/>', ': ')))
-                self.publish_image(data, 'astrofy.{0}.{1}'.format(
-                    send_to, data['classified']))
-                self.add_client_obj(send_to, data['id'])
-            else:
-                print "***** NO CLIENTS AVALAIBLE *****"
+        # if not data['event']:
+        #     send_to = self.get_client(data['id'])
+        #     if send_to:
+        #         # Normal message
+        #         msg = (" Image source(URL): {0},\n Path: {1},\n "
+        #                "Object_path: {2},\n Classified: {3}".format(
+        #                     data['source'],
+        #                     data['path'],
+        #                     data['object_path'],
+        #                     data['classified']
+        #                 )
+        #         )
+        #         print msg
+        #         # self.websocket.write_message(
+        #         #     json.dumps(data, sort_keys=True,
+        #         #     indent=4, separators=('<br/>', ': ')))
+        #         self.publish_image(data, 'astrofy.{0}.{1}'.format(
+        #             send_to, data['classified']))
+        #         self.add_client_obj(send_to, data['id'])
+        #     else:
+        #         print "***** NO CLIENTS AVALAIBLE *****"
 
-                if not data['classified']:
-                    db.objects.update(
-                        {"_id": ObjectId(data['_id'])},
-                        {"$set": {"classified": 0}})
+        #         if not data['classified']:
+        #             db.objects.update(
+        #                 {"_id": ObjectId(data['_id'])},
+        #                 {"$set": {"classified": 0}})
 
-        else:
+        if data['event']:
             if data['clientid'] != id(self):
-                if not self.client_exists(data['clientid']):
-                    if data['event'] < 3:
-                        self.add_client(data['clientid'])
-                elif data['event'] == 3:
-                    self.remove_client(data['clientid'])
+                # if not self.client_exists(data['clientid']):
+                #     if data['event'] < 3:
+                #         # self.add_client(data['clientid'])
+                #         pass
+                # elif data['event'] == 3:
+                if data['event'] == 3:
+                    # self.remove_client(data['clientid'])
+                    pass
+                elif data['event'] == 4:
+                    # Object processed by a client
+                    data['classified'] += 1
+                    db.results.update({"_id": ObjectId(data['_id'])}, data)
+                    if data['classified'] < CLASSIFY_THRESHOLD:
+                        data['event'] = 0
+                        self.publish_image(
+                            data,
+                            'astrofy.dispatcher.{0}'.format(
+                                data['classified']))
+                elif data['event'] == 100:
+                    # Object processed by a automatic classifier
+                    data['classified'] += 1
+                    db.results.update({"_id": ObjectId(data['_id'])}, data)
 
         print data, ' | ' , id(self)
         print self.client_ids
@@ -160,29 +178,29 @@ class PikaClient(object):
         self.channel.basic_ack(method.delivery_tag)
         time.sleep(1)
 
-    def client_exists(self, client_id):
-        return client_id in self.client_ids
+    # def client_exists(self, client_id):
+    #     return client_id in self.client_ids
 
-    def add_client(self, client_id):
-        self.client_ids[client_id] = []
-        return
+    # def add_client(self, client_id):
+    #     self.client_ids[client_id] = []
+    #     return
 
-    def remove_client(self, client_id):
-        if self.client_exists(client_id):
-            del self.client_ids[client_id]
+    # def remove_client(self, client_id):
+    #     if self.client_exists(client_id):
+    #         del self.client_ids[client_id]
 
-    def get_client(self, obj_id):
-        if self.client_ids:
-            items = self.client_ids.items()
-            shuffle(items)
-            for client_id, obj_ids in items:
-                if obj_id not in obj_ids:
-                    return client_id
-        return None
+    # def get_client(self, obj_id):
+    #     if self.client_ids:
+    #         items = self.client_ids.items()
+    #         shuffle(items)
+    #         for client_id, obj_ids in items:
+    #             if obj_id not in obj_ids:
+    #                 return client_id
+    #     return None
 
-    def add_client_obj(self, client_id, obj_id):
-        self.client_ids[client_id].append(obj_id)
-        return
+    # def add_client_obj(self, client_id, obj_id):
+    #     self.client_ids[client_id].append(obj_id)
+    #     return
 
     def on_basic_cancel(self, frame):
         self.connection.close()
