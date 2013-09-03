@@ -15,19 +15,19 @@ class Feature(object):
 	def __init__(self):
 		super(Feature, self).__init__()
 
-	def __getattribute__(self, name):
+	def _getattr(self, name):
 		try:
 			return object.__getattribute__(self, name)
 		except AttributeError:
 			return None
 
-	def get(self, name, obj_type, value):
+	def get(self, name, value):
 		"""getter helper"""
 
-		attr = self.__getattribute__(name)
+		attr = self._getattr(name)
 
 		if attr != None:
-			return self.convert(attr, obj_type, value)
+			return self.convert(attr, value)
 
 		return []
 
@@ -66,7 +66,7 @@ class LinealFeatures(Feature):
 	objc_flags= 19
 	dof       = 20
 
-	def convert(self, attr, obj_type, value):
+	def convert(self, attr, value):
 		"""Convert the feature in a svm valid feature string"""
 
 		# We return a iterable to extend the final features list
@@ -115,7 +115,7 @@ class PolinomialFeatures(Feature):
 
 		return self.indexes[name]
 
-	def convert(self, attr, obj_type, values):
+	def convert(self, attr, values):
 		"""Convert the feature in a svm valid feature string
 
 		Example of values:
@@ -221,9 +221,18 @@ class SDSSObjectTypes(object):
 		3: -1,
 		6: 1}
 
+	sdss_classes = {
+		-1: 3,
+		1: 6}
+
+
 	def get_svm_class(self, obj_type):
 		"""Getter helper to get the svm class"""
 		return self.svm_classes.get(int(obj_type))
+
+	def get_sdss_class(self, obj_type):
+		"""Getter helper to get the sdss class"""
+		return self.sdss_classes.get(int(obj_type))
 
 
 LF_FIELDS = [

@@ -11,6 +11,7 @@ import os
 import simplejson as json
 
 from utils import logger
+from utils import get_file_names
 from features import LinealFeatures
 from features import SDSSObjectTypes
 from features import PolinomialFeatures
@@ -31,18 +32,6 @@ else:
     SOURCE_PATH = './data/'
     DESTINATION_PATH = './set/'
 
-
-def get_file_names():
-    """inspect the source folder and return all the available file paths."""
-    logger.info("Getting the files names")
-
-    files = set()
-    for file_name in os.listdir(SOURCE_PATH):
-        if file_name.endswith(".json"):
-            files.add(SOURCE_PATH + file_name)
-    return files
-
-
 def extract(file_path_list):
     """Extracts the (json) raw content of a given file"""
     logger.info("Extracting the data")
@@ -59,6 +48,8 @@ def extract(file_path_list):
 def generate(stream, total):
     logger.info("Generating the data set")
 
+    #We keep a variable counter for the unknowns objects
+    unknown = 0
     # We open the training file in 'a' mode to append the data to the file
     # And also to avoid overwrite the file an lose data
     with open(DESTINATION_PATH + TRAINING_SET_FILE_NAME, 'a') as dest_file:
@@ -68,14 +59,14 @@ def generate(stream, total):
 
             # Get object type (objc_type) and evaluate for be used as a 
             # training set element.
-            obj_type =sot.get_svm_class(j_obj['objc_type'])
+            obj_type = sot.get_svm_class(j_obj['objc_type'])
 
             if obj_type != None:
                 for key, value in j_obj.items():
                     if key in PF_FIELDS:
-                        features_list.extend(pf.get(key, obj_type, value))
+                        features_list.extend(pf.get(key, value))
                     elif key in LF_FIELDS:
-                        features_list.extend(lf.get(key, obj_type, value))
+                        features_list.extend(lf.get(key, value))
 
                 line_to_write = BASE.format(
                     obj_type=obj_type,
@@ -88,19 +79,22 @@ def generate(stream, total):
 
             else:
                 # Logging unknown objects
+                unknown += 1
                 unknown_type = j_obj['objc_type']
-                logger.info("Unknown object id {}:{}".format(
+                logger.debug("Unknown object id {}:{}".format(
                     unknown_type,
                     sot.indexes[unknown_type])
                 )
 
-        if n % 10 == 0:
-            logger.info("Processing object {}/{}".format(n, total))
+            if n % 100 == 0:
+                logger.info("Processing object {}/{}".format(n, total))
+
+    logger.critical("Unknown objects: {}/{}".format(unknown, total))
 
 if __name__ == '__main__':
     logger.info("Generating the training set")
 
-    file_names = get_file_names()
+    file_names = get_file_names(SOURCE_PATH)
     total = len(file_names)
 
     generate(extract(file_names), total)
