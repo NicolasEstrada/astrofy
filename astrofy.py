@@ -171,8 +171,8 @@ class PikaClient(object):
                 elif data['event'] == 3:
                     self.websocket.remove_client(data['clientid'])
 
-        print data, ' | ' , id(self)
-        print self.websocket.client_ids
+        # print data, ' | ' , id(self)
+        # print self.websocket.client_ids
 
         self.channel.basic_ack(method.delivery_tag)
 
@@ -207,7 +207,7 @@ class PikaClient(object):
         #         "clientid": id(self)
         #     }
         # )
-
+        print data
         if data['event'] == 100:
             self.channel.basic_publish(
                 exchange='astrofy',
@@ -314,13 +314,13 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
     def on_message(self,msg):
         'A message on the Websocket.'
 
-        print "Message: [{0}] on the Websocket".format(msg)
+        # print "Message: [{0}] on the Websocket".format(msg)
         self.pika_client.publish_image(msg)
 
     def on_close(self):
         'Closing the websocket ...'
 
-        print "WebSocket Closed"
+        # print "WebSocket Closed"
         self.pika_client.remove_client()
         self.pika_client.connection.close()
 

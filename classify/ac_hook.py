@@ -82,8 +82,8 @@ def on_message(ws, message):
         "source": "AUTO",
         "level": "AUTO",
         "clientid": "AUTO",
-        "creation_ts": j_obj['creation_ts'],
-        "start_ts": j_obj['start_ts'],
+        "creation_date": j_obj['creation_ts'],
+        "start_date": j_obj['start_ts'],
         "event": 100
     }
 
