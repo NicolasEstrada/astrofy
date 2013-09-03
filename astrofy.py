@@ -23,6 +23,12 @@ from tornado.options import options, define
 import pika
 from pika.adapters.tornado_connection import TornadoConnection
 
+
+if 'ASTROFY_HOME' in os.environ:
+    STATIC_PATH = os.environ['ASTROFY_HOME'] + 'images/'
+else:
+    STATIC_PATH = '/tmp/images'
+
 # Define available options
 define("port", default=8888, type=int, help="run on the given port")
 define("cookie_secret", help="random cookie secret")
@@ -328,7 +334,9 @@ class TornadoWebServer(tornado.web.Application):
         handlers = [
 
                 (r"/ws_channel",WebSocketServer),
-                (r"/astrofy",LiveChat)
+                (r"/astrofy",LiveChat),
+                (r'/get_image/(.*)', tornado.web.StaticFileHandler, 
+                    {'path': STATIC_PATH})
         ]
 
         # Other basics settings
