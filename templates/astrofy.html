@@ -5,11 +5,37 @@
 
 <script type="text/javascript" src="/static/swfobject.js"> </script>
 
+<script type="text/javascript" src="/static/js/jquery-2.0.3.min.js"> </script>
+
+<style type="text/css">
+.wrap {
+   width:100%;
+   margin:0 auto;
+}
+.left_col {
+   float:left;
+   /* width:300px; */
+   width:30%;
+}
+.center_col {
+   float:left;
+   /* width:300px; */
+    width:30%;
+}
+.right_col {
+   float:right;
+   /* width:400px; */
+	width:40%;
+}
+</style>
 
 <script type="text/javascript">
 
 WEB_SOCKET_SWF_LOCATION = "/static/WebSocketMain.swf";
 
+var URL = 'ws://localhost:8888/ws_channel';
+var incoming_objects = new Array();
+var current = null;
 
 function log(msg){
 
@@ -21,24 +47,35 @@ function log(msg){
 	// var time = hour + ":" + min + ":" + sec + ":" + msec;
 	// document.getElementById('chat_log').innerHTML += time + ": " + msg + "</br/>";
 	document.getElementById('chat_log').innerHTML += msg + "</br/>";
-}
+};
 
 
-function ws_init(url) {
+$(document).ready(function(){
 
-	log("connecting to" + url + "...");
-	ws = new WebSocket(url);
+	log("connecting to" + URL + "...");
+	ws = new WebSocket(URL);
 	ws.onopen = function(){	
 			log("Connection established");
 		};
 	ws.onmessage = function(msg){
-			log("Image Received [ " + msg.data + " ]" );
+			if($('#img_box').attr('status') == '1'){
+				current = JSON.parse(msg.data);
+				var keys = (current.path).split('/');
+				log("RCVD(show): " + keys[keys.length - 1]);
+				$('#img_box').attr('src', 'get_image/' + keys[keys.length - 1]);
+				$('#img_box').attr('status', '0');
+			}
+			else{
+				var stash = JSON.parse(msg.data);
+				var keys = (stash.path).split('/');
+				log("RCVD(stash): " + keys[keys.length - 1]);
+				incoming_objects.push(stash);
+			}
 		};
 	ws.onclose = function(){
 			log("Connection Closed");
-		}
-
-}
+		};
+});
 
 function ws_send(msg){
 	log("Send Image: " + msg);
@@ -49,28 +86,88 @@ function ws_close(){
 	log("closing connection..");
 	ws.close();
 }
+
+function set_img_attr(value){
+	log("changing image");
+	$('#img_box').attr('src', value)
+}
+
+function lock_checkboxes() {
+	var not_checked = $('.checkbox').filter(':not(:checked)');
+
+	if (not_checked.length < 3){
+		not_checked.attr("disabled", true);
+	}
+	else{
+		not_checked.removeAttr("disabled");
+	}
+
+	
+}
+
+function refresh(){
+	if (incoming_objects.length > 0){
+	    current = incoming_objects.pop();
+		var keys = (current.path).split('/');
+		log("RCVD(show): " + keys[keys.length - 1]);
+		$('#img_box').attr('src', 'get_image/' + keys[keys.length - 1]);
+	}
+	else{
+		$('#img_box').attr('src', 'get_image/sample.jpg');
+		$('#img_box').attr('status', '1');
+	}
+
+	$('.checkbox').removeAttr("disabled");
+	$('.checkbox').attr('checked', false);
+}
+
+function classify(){
+	var checked = $('.checkbox').filter(':checked');
+
+	if (checked.length < 1){
+		alert("Please select 1 category");
+		return;
+	}
+
+
+    current["type"] = checked.val();
+    current["application"] = "astrofy";
+    current["level"] = "normal";
+    current["event"] = 4;
+
+    ws.send(JSON.stringify(current));
+
+    log("SEND: type: " + checked.val());
+
+    refresh();
+}
+
 </script>
 
 </head>
 <body>
 <form name="input_form">
-	<table>
-		<tr>
-			<td> Host/Resource: </td>
-			<td> <input type="text" name="host" size="50" value="ws://localhost:8888/ws_channel"> </td>
-			<td> <input type="button" value="connect" onclick="ws_init(document.input_form.host.value)"> </td>
-			<td> <input type="button" value="close" onclick="ws_close()"></td>
+<div class="wrap">
+	<div class="left_col">
+	<h2>Astrofy v0.1</h2>
+	<img id="img_box" border="0" src="get_image/sample.jpg" status="1" width="300" height="228">
+	</div>
+		
+	<div class="center_col">
+		<h2>Classify</h2>	
+		<input class="checkbox" id="cbs" type="checkbox" name="star" value="6" onclick="lock_checkboxes()">Star<br>
+		<input class="checkbox" id="cbg" type="checkbox" name="galaxy" value="3" onclick="lock_checkboxes()">Galaxy<br>
+		<input class="checkbox" id="cbu" type="checkbox" name="unkown" value="0" onclick="lock_checkboxes()">Unkown<br><br><br>
+		<td> <input id="" type="button" value="Classify" onclick="classify()"></td>
+		<td> <input type="button" value="Close" onclick="ws_close()"></td>
+	</div>
 
-		</tr>
-
-		<tr>	<td> Image </td>
-			<td> <input type="text" name="msg" size="50" align="center"> </td>
-			<td> <input type="button" value="send" onclick="ws_send(document.input_form.msg.value)"> </td>
-		</tr>
-
-	</table>
+	<div class="right_col">
+		<div id="chat_log"  display="inline">
+		<h2>Log</h2>
+		</div>
+	 </div>		
+</div>	
 </form>
-
-<div id="chat_log"> </div>
 </body>
 </html>

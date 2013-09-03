@@ -23,6 +23,12 @@ from tornado.options import options, define
 import pika
 from pika.adapters.tornado_connection import TornadoConnection
 
+
+if 'ASTROFY_HOME' in os.environ:
+    STATIC_PATH = os.environ['ASTROFY_HOME'] + 'images/'
+else:
+    STATIC_PATH = '/tmp/images'
+
 # Define available options
 define("port", default=8888, type=int, help="run on the given port")
 define("cookie_secret", help="random cookie secret")
@@ -152,10 +158,9 @@ class PikaClient(object):
                         data['classified']
                     )
             )
-            # self.websocket.write_message(
-            #     json.dumps(data, sort_keys=True,
-            #     indent=4, separators=('<br/>', ': ')))
-            self.websocket.write_message(msg)
+            self.websocket.write_message(
+                json.dumps(data))
+            # self.websocket.write_message(msg)
         else:
             if data['clientid'] != id(self):
                 if not self.websocket.client_exists(data['clientid']):
@@ -166,8 +171,8 @@ class PikaClient(object):
                 elif data['event'] == 3:
                     self.websocket.remove_client(data['clientid'])
 
-        print data, ' | ' , id(self)
-        print self.websocket.client_ids
+        # print data, ' | ' , id(self)
+        # print self.websocket.client_ids
 
         self.channel.basic_ack(method.delivery_tag)
 
@@ -202,7 +207,7 @@ class PikaClient(object):
         #         "clientid": id(self)
         #     }
         # )
-
+        print data
         if data['event'] == 100:
             self.channel.basic_publish(
                 exchange='astrofy',
@@ -309,13 +314,13 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
     def on_message(self,msg):
         'A message on the Websocket.'
 
-        print "Message: [{0}] on the Websocket".format(msg)
+        # print "Message: [{0}] on the Websocket".format(msg)
         self.pika_client.publish_image(msg)
 
     def on_close(self):
         'Closing the websocket ...'
 
-        print "WebSocket Closed"
+        # print "WebSocket Closed"
         self.pika_client.remove_client()
         self.pika_client.connection.close()
 
@@ -340,7 +345,9 @@ class TornadoWebServer(tornado.web.Application):
         handlers = [
 
                 (r"/ws_channel",WebSocketServer),
-                (r"/astrofy",LiveChat)
+                (r"/astrofy",LiveChat),
+                (r'/get_image/(.*)', tornado.web.StaticFileHandler, 
+                    {'path': STATIC_PATH})
         ]
 
         # Other basics settings
