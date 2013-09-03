@@ -12,6 +12,7 @@ import argparse
 import websocket
 
 from helpers.utils import json
+from helpers.utils import logger
 from clasistar import ClassiStar
 
 
@@ -69,6 +70,8 @@ def on_message(ws, message):
 
     obj_data = j_obj['object_data']
 
+    logger.info("RCVD: {}".format(obj_data["spectrumID"])) 
+
     cs = ClassiStar(obj_data)
 
     predicted_type, extra = cs.classify()
@@ -82,6 +85,7 @@ def on_message(ws, message):
 
     # Sending response (writing to the websocket)
     ws.write(json.dumps(j_obj))
+    logger.info("SEND: {}".format(obj_data["spectrumID"])) 
 
 def on_error(ws, error):
     print error
@@ -124,4 +128,9 @@ if __name__ == "__main__":
     port = args.p
 
     url_str = "{}:{}/"
-    run(url_str.format(url, port))
+
+    url_str = url_str.format(url, port)
+
+    logger.info("Listening on {}".format(url_str))
+
+    run(url_str)

@@ -4,7 +4,7 @@
 # This module requires libsvm-3.17 package
 
 __author__ = "Nicolas, Matias"
-__version__ = "0.1"
+__version__ = "0.2"
 
 import os
 import json
@@ -16,6 +16,7 @@ from model import load_model
 from model import svm_predict
 from model import svm_read_problem
 
+from helpers.utils import logger
 from helpers.scale_set import scale
 from helpers.utils import get_file_names
 from helpers.features import LinealFeatures
@@ -168,6 +169,8 @@ class ClassiStar(object):
             Exception: Uncaught exception.
         """
 
+        logger.info("Classifying... ")
+
         features = self._convert()
 
         with NamedTemporaryFile() as scaled_buffer:
@@ -199,6 +202,9 @@ class ClassiStar(object):
                 "sdss_class": self.objtype}
 
             predicted_type = sot.get_sdss_class(p_label[0])
+
+            logger.info("Clasification done: {} -> {}".format(
+                predicted_type, extra_data))
 
             return predicted_type, extra_data
 
