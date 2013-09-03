@@ -28,6 +28,7 @@ from classify.clasistar import ClassiStar
 "start_ts": '2013-09-02 21:39:36', 
 "end_ts": '2013-09-02 21:39:36',
 "creation_ts": '2013-09-02 21:39:36'
+"event": 0  0:normal, 1:client, 2:new_client
  }
 """
 
@@ -41,7 +42,8 @@ from classify.clasistar import ClassiStar
 "level": "AUTO",
 "creation_ts: "2013-09-02 21:39:36",
 "start_ts": '2013-09-02 21:39:37', 
-"end_ts": '2013-09-02 21:39:46'
+"end_ts": '2013-09-02 21:39:46',
+"event": 100
 }
 
 """
@@ -79,7 +81,8 @@ def on_message(ws, message):
         "source": "AUTO",
         "level": "AUTO",
         "creation_ts": j_obj['creation_ts'],
-        "start_ts": j_obj['start_ts']
+        "start_ts": j_obj['start_ts'],
+        "event": 100
     }
 
     # Sending response (writing to the websocket)
