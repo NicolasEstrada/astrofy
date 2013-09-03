@@ -1,4 +1,5 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
+
 """This is a module that consume object desctiptions from
 a WebSocket using websocket-client library
 (github.com/liris/websocket-client v0.11.0)
@@ -81,7 +82,7 @@ def on_message(ws, message):
     j_obj["extra_data"] = extra
 
     # Sending response (writing to the websocket)
-    ws.write(json.dumps(j_obj))
+    ws.send(json.dumps(j_obj))
 
 def on_error(ws, error):
     print error
