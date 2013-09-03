@@ -74,6 +74,9 @@ $(document).ready(function(){
 				$('#img_box').attr('status', '0');
 			}
 			else{
+				if (incoming_objects.length > 19){
+					return;
+				}
 				var stash = JSON.parse(msg.data);
 				var keys = (stash.path).split('/');
 				log("RCVD(stash): " + keys[keys.length - 1]);
