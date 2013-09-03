@@ -41,10 +41,14 @@ PORT = 8888
 
 class PikaClient(object):
 
-    def __init__(self):
+    def __init__(self, **kw):
         # Client queue has the class id as name
-        self.queue_name = "astrofy_client-{0}".format(id(self))
-    
+        self.queue_name = kw.get("queue_name",
+                                 "astrofy_client-{0}".format(id(self)))
+
+        self.rkey = kw.get("rkey", "astrofy.object.{0}.#".format(id(self)))
+        self.notify = kw.get("notify", True)
+
         # Conncetion values
         self.connected = False
         self.connecting = False
@@ -103,16 +107,23 @@ class PikaClient(object):
 
 
     def on_queue_declared(self, frame):
+        if self.notify:
+            self.channel.queue_bind(
+                exchange='astrofy',
+                queue=self.queue_name,
+                routing_key='astrofy.notifications.notify.#',
+                callback=None
+            )
+            self.channel.queue_bind(
+                exchange='astrofy',
+                queue=self.queue_name,
+                routing_key='astrofy.notifications.{0}.#'.format(id(self)),
+                callback=None
+            )
         self.channel.queue_bind(
             exchange='astrofy',
             queue=self.queue_name,
-            routing_key='astrofy.notify.#',
-            callback=None
-        )
-        self.channel.queue_bind(
-            exchange='astrofy',
-            queue=self.queue_name,
-            routing_key='astrofy.{0}.#'.format(id(self)),
+            routing_key=self.rkey,
             callback=self.on_queue_bound
         )
     
@@ -245,14 +256,14 @@ class PikaClient(object):
         if not client_id:
             self.channel.basic_publish(
                 exchange='astrofy',
-                routing_key='astrofy.notify',
+                routing_key='astrofy.notifications.notify',
                 body = data,
                 properties=properties
             )
         else:
             self.channel.basic_publish(
                 exchange='astrofy',
-                routing_key='astrofy.{0}'.format(client_id),
+                routing_key='astrofy.object.{0}'.format(client_id),
                 body = data,
                 properties=properties
             )
@@ -276,14 +287,14 @@ class PikaClient(object):
             for cid in self.websocket.client_ids:            
                 self.channel.basic_publish(
                     exchange='astrofy',
-                    routing_key='astrofy.{0}'.format(cid),
+                    routing_key='astrofy.object.{0}'.format(cid),
                     body = data,
                     properties=properties
                 )
         else:
             self.channel.basic_publish(
                 exchange='astrofy',
-                routing_key='astrofy.{0}'.format(client_id),
+                routing_key='astrofy.object.{0}'.format(client_id),
                 body = data,
                 properties=properties
             )
@@ -311,7 +322,7 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
 
         ioloop.add_timeout(1000, self.pika_client.connect)
 
-    def on_message(self,msg):
+    def on_message(self, msg):
         'A message on the Websocket.'
 
         # print "Message: [{0}] on the Websocket".format(msg)
@@ -337,6 +348,46 @@ class WebSocketServer(tornado.websocket.WebSocketHandler):
             return
 
 
+class ClasistarSocket(tornado.websocket.WebSocketHandler):
+    'WebSocket Handler, Which handle new websocket connection.'
+
+    def open(self):
+        'Websocket Connection opened.'
+        self.client_ids = []
+        self.pika_client = PikaClient(
+            queue_name='astrofy-clasistar',
+            rkey='astrofy.object.*.#',
+            notify=False)
+
+        self.pika_client.websocket = self
+        ioloop.add_timeout(1000, self.pika_client.connect)
+
+    def on_message(self, msg):
+        'A message on the Websocket.'
+
+        # print "Message: [{0}] on the Websocket".format(msg)
+        print msg
+        self.pika_client.publish_image(msg)
+
+    def on_close(self):
+        'Closing the websocket ...'
+
+        self.pika_client.remove_client()
+        self.pika_client.connection.close()
+
+    def client_exists(self, client_id):
+        return client_id in self.client_ids
+
+    def add_client(self, client_id):
+        self.client_ids.append(client_id)
+
+    def remove_client(self, client_id):
+        try:
+            self.client_ids.remove(client_id)
+        except ValueError:
+            return
+
+
 class TornadoWebServer(tornado.web.Application):
 
     def __init__(self):
@@ -344,8 +395,9 @@ class TornadoWebServer(tornado.web.Application):
         # Urls for mapping requests
         handlers = [
 
-                (r"/ws_channel",WebSocketServer),
-                (r"/astrofy",LiveChat),
+                (r"/ws_channel", WebSocketServer),
+                (r"/ws_clasistar", ClasistarSocket),
+                (r"/astrofy", LiveChat),
                 (r'/get_image/(.*)', tornado.web.StaticFileHandler, 
                     {'path': STATIC_PATH})
         ]

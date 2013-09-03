@@ -95,7 +95,7 @@ class PikaClient(object):
         self.channel.queue_bind(
             exchange='astrofy',
             queue=self.queue_name,
-            routing_key='astrofy.notify.#',
+            routing_key='astrofy.notifications.notify.#',
             callback=None
         )
         self.channel.queue_bind(
@@ -135,7 +135,7 @@ class PikaClient(object):
                 # self.websocket.write_message(
                 #     json.dumps(data, sort_keys=True,
                 #     indent=4, separators=('<br/>', ': ')))
-                self.publish_image(data, 'astrofy.{0}.{1}'.format(
+                self.publish_image(data, 'astrofy.object.{0}.{1}'.format(
                     send_to, data['classified']))
                 self.add_client_obj(send_to, data['id'])
             else:
@@ -238,7 +238,7 @@ class PikaClient(object):
     #     if not client_id:
     #         self.channel.basic_publish(
     #             exchange='astrofy',
-    #             routing_key='astrofy.notify',
+    #             routing_key='astrofy-notify',
     #             body = data,
     #             properties=properties
     #         )

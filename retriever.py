@@ -97,12 +97,6 @@ class PikaClient(object):
         self.channel.queue_bind(
             exchange='astrofy',
             queue=self.queue_name,
-            routing_key='astrofy.notify.#',
-            callback=None
-        )
-        self.channel.queue_bind(
-            exchange='astrofy',
-            queue=self.queue_name,
             routing_key='astrofy.retriever.#',
             callback=self.on_queue_bound
         )
@@ -174,8 +168,8 @@ class PikaClient(object):
                     data['classified'] += 1
                     db.results.update({"_id": ObjectId(data['_id'])}, data)
 
-        print data, ' | ' , id(self)
-        print self.client_ids
+        # print data, ' | ' , id(self)
+        # print self.client_ids
 
         self.channel.basic_ack(method.delivery_tag)
         time.sleep(1)
@@ -258,7 +252,7 @@ class PikaClient(object):
     #     if not client_id:
     #         self.channel.basic_publish(
     #             exchange='astrofy',
-    #             routing_key='astrofy.notify',
+    #             routing_key='astrofy-notify',
     #             body = data,
     #             properties=properties
     #         )
