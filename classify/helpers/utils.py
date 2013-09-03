@@ -5,9 +5,17 @@ from __future__ import division
 __author__ = "Nicolas, Matias"
 __version__ = "0.1"
 
+import os
 import time
 import random
 import logging
+
+try:
+    import simplejson as json
+except ImportError:
+    import json
+    # Avoid SumblimeLinter warnings
+    json
 
 FORMAT = '%(asctime)-15s - %(levelname)s - %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -30,3 +38,13 @@ def wait(logger=None, max_wait=MAX_WAIT):
 
     time.sleep(secs)
 
+
+def get_file_names(path):
+    """inspect the source folder and return all the available file paths."""
+    logger.info("Getting the files names")
+
+    files = set()
+    for file_name in os.listdir(path):
+        if file_name.endswith(".json"):
+            files.add(path + file_name)
+    return files

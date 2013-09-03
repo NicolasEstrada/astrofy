@@ -41,3 +41,6 @@ classify/helpers/log/
 data/
 set/
 images/
+model/
+test/
+classify/log/

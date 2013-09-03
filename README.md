@@ -3,8 +3,12 @@
 
 # Server Requirements
 * [Python 2.7+](http://www.python.org)
-* [Tornado](https://github.com/facebook/tornado)
-* [Pika](https://github.com/pika/pika)
+* [Tornado 3.1](https://github.com/facebook/tornado)
+* [Pika 0.9.13](https://github.com/pika/pika)
+* [websocket-client 0.11.0](https://github.com/liris/websocket-client)
+* [requests 1.2.3](https://github.com/kennethreitz/requests)
+* [simplejson 3.3.0](https://github.com/simplejson/simplejson)
+* [libsvm 3.17](http://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
 # Web Requirements
 * [Websockets](http://code.google.com/p/swfobject/)
