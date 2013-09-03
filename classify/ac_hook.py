@@ -73,22 +73,15 @@ def on_message(ws, message):
 
     predicted_type, extra = cs.classify()
 
-    response = {
-        "id": j_obj['id'],
-        # 3:GALAZY; 6:STAR
-        "type": predicted_type,
-        "sdss_type": obj_data['objc_type'],
-        "extra_data": extra,
-        "source": "AUTO",
-        "level": "AUTO",
-        "clientid": "AUTO",
-        "creation_date": j_obj['creation_ts'],
-        "start_date": j_obj['start_ts'],
-        "event": 100
-    }
+    j_obj["type"] = predicted_type
+    j_obj["application"] = "AUTO"
+    j_obj["level"] = "AUTO"
+    j_obj["event"] = 100
+    j_obj["clientid"] = "AUTO"
+    j_obj["extra_data"] = extra
 
     # Sending response (writing to the websocket)
-    ws.write(json.dumps(response))
+    ws.write(json.dumps(j_obj))
 
 def on_error(ws, error):
     print error
