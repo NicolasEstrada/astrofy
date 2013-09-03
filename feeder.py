@@ -85,8 +85,8 @@ class PikaClient(object):
         self.channel.exchange_declare(
             exchange='astrofy',
             type='topic',
-            auto_delete=True,
-            durable=False,
+            auto_delete=False,
+            durable=True,
             callback=self.on_exchange_declared
         )
 
@@ -164,8 +164,8 @@ class PikaClient(object):
                 self.publish_image(obj)
                 db.objects.update({"_id": obj_id}, {"$set": {"classified": -1}})
 
-                wait(logger, 10, False)
-            wait(logger, 600, False)
+                # wait(logger, 10, False)
+            wait(logger, 60, False)
 
 
 if __name__ == '__main__':

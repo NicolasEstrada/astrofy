@@ -80,8 +80,8 @@ class PikaClient(object):
         self.channel.exchange_declare(
             exchange='astrofy',
             type='topic',
-            auto_delete=True,
-            durable=False,
+            auto_delete=False,
+            durable=True,
             callback=self.on_exchange_declared
         )
 
@@ -90,8 +90,8 @@ class PikaClient(object):
         self.channel.queue_declare(
             auto_delete=True,
             queue = self.queue_name,
-            durable=False,
-            exclusive=True,
+            durable=True,
+            exclusive=False,
             callback=self.on_queue_declared
         )
 
@@ -100,7 +100,7 @@ class PikaClient(object):
         self.channel.queue_bind(
             exchange='astrofy',
             queue=self.queue_name,
-            routing_key='astrofy.notify.#'.format(id(self)),
+            routing_key='astrofy.notify.#',
             callback=None
         )
         self.channel.queue_bind(
@@ -116,7 +116,7 @@ class PikaClient(object):
         self.channel.basic_consume(
             consumer_callback=self.on_pika_message,
             queue=self.queue_name,
-            no_ack=True
+            no_ack=False
         )
 
 
@@ -145,28 +145,31 @@ class PikaClient(object):
         if not data['event']:
             # Normal message
             msg = (" Image source: {0},\n Path: {1},\n "
-                   "Data: {2},\n Classified: {3}".format(
+                   "Object path: {2},\n Classified: {3}".format(
                         data['source'],
                         data['path'],
-                        data['object_data'],
+                        data['object_path'],
                         data['classified']
                     )
             )
-            self.websocket.write_message(
-                json.dumps(data, sort_keys=True,
-                indent=4, separators=('<br/>', ': ')))
+            # self.websocket.write_message(
+            #     json.dumps(data, sort_keys=True,
+            #     indent=4, separators=('<br/>', ': ')))
+            self.websocket.write_message(msg)
         else:
-            if data['client_id'] != id(self):
-                if not self.websocket.client_exists(data['client_id']):
+            if data['clientid'] != id(self):
+                if not self.websocket.client_exists(data['clientid']):
                     if data['event'] < 3:
-                        self.websocket.add_client(data['client_id'])
-                    if (data['event'] == 1) and (data['client_id'] != id(self)):
-                        self.new_client(data['client_id'])
+                        self.websocket.add_client(data['clientid'])
+                    if (data['event'] == 1) and (data['clientid'] != id(self)):
+                        self.new_client(data['clientid'])
                 elif data['event'] == 3:
-                    self.websocket.remove_client(data['client_id'])
+                    self.websocket.remove_client(data['clientid'])
 
         print data, ' | ' , id(self)
         print self.websocket.client_ids
+
+        self.channel.basic_ack(method.delivery_tag)
 
 
     def on_basic_cancel(self, frame):
@@ -181,7 +184,7 @@ class PikaClient(object):
         return ''.join(random.choice(chars) for x in range(size))
 
     def publish_image(self, ws_msg):
-        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
+        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=2)
 
         data = json.dumps(
             {
@@ -195,7 +198,7 @@ class PikaClient(object):
                 },
                 "classified": 0,
                 "event": 0,
-                "client_id": id(self)
+                "clientid": id(self)
             }
         )
 
@@ -210,7 +213,7 @@ class PikaClient(object):
 
 
     def new_client(self, client_id=None):
-        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
+        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=2)
 
         data = json.dumps(
             {
@@ -219,7 +222,7 @@ class PikaClient(object):
                 "object_data": "",
                 "classified": 0,
                 "event": 1,
-                "client_id": id(self)
+                "clientid": id(self)
             }
         )
         if not client_id:
@@ -239,7 +242,7 @@ class PikaClient(object):
 
 
     def remove_client(self, client_id=None):
-        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=1)
+        properties = pika.BasicProperties(content_type="text/plain",delivery_mode=2)
 
         data = json.dumps(
             {
@@ -248,7 +251,7 @@ class PikaClient(object):
                 "object_data": "",
                 "classified": 0,
                 "event": 3,
-                "client_id": id(self)
+                "clientid": id(self)
             }
         )
 
