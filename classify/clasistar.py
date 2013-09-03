@@ -8,6 +8,7 @@ __version__ = "0.1"
 
 import os
 import json
+import datetime
 
 from  tempfile import NamedTemporaryFile
 
@@ -23,6 +24,7 @@ from helpers.features import PolinomialFeatures
 from helpers.features import LF_FIELDS, PF_FIELDS
 
 DELIMITER = ' '
+DT_FORMAT = '%Y:%m:%d %H:%M:%S.%f'
 
 lf = LinealFeatures()
 sot = SDSSObjectTypes()
@@ -43,7 +45,7 @@ class ClassiStar(object):
         .
     """
 
-    def __init__(self, obj_path, model_path=None):
+    def __init__(self, obj, obj_path=None, model_path=None):
         """initiaze object parameters.
 
         Args:
@@ -58,14 +60,21 @@ class ClassiStar(object):
         self.authors = __author__
         self._description = "Astronomical object clasification"
 
-        self.uri = obj_path
-        self.id = "sdss.274.51913.93.26"
-        self.objid = "1237654669203079226"
+        self.start_ts = datetime.datetime.utcnow()
+        # self.uri = obj_path
+        # self.id = "sdss.274.51913.93.26"
+        # self.objid = "1237654669203079226"
 
-        self.obj_json = None
+        # We get the data directly from the websocket as a python dicionary. 
+        self.obj_json = obj
+        # self._get_object()
+
+        self.id = obj["objc_id"]
+        self.objid = obj['id']
+
+
         self.model = None
 
-        self._get_object()
         self._load_model(model_path)
 
     def _load_model(self, file_path):
@@ -158,16 +167,13 @@ class ClassiStar(object):
         """
 
         features = self._convert()
-        correct = False
 
         with NamedTemporaryFile() as scaled_buffer:
             # Store the features in a file buffer
             # To be used as a filehandler by svm_read_problem
-
             with NamedTemporaryFile() as f_buffer:
                 f_buffer.write(features)
                 f_buffer.seek(0)
-
 
                 # Scaling the generated features temp file
                 scale(
@@ -182,22 +188,17 @@ class ClassiStar(object):
             p_label, p_acc, p_val = svm_predict(
                 [y[-1]], [x[-1]], self.model, "-q")
 
-            print 'Predict: ', sot.get_sdss_class(p_label[0])
-            print 'SDSS type: ', self.obj_json['objc_type']
-            print 'Value: ', p_val[0][0]
+            self.end_ts = datetime.datetime.utcnow()
+            # Generating the extra_data dictionary
+            extra_data = {
+                "predicted_value": p_val[0][0],
+                "start_dt": self.start_ts.strftime(DT_FORMAT),
+                "end_dt": self.end_ts.strftime(DT_FORMAT)}
 
-            if sot.get_sdss_class(p_label[0]) == self.obj_json['objc_type']:
-                correct = True
+            predicted_type = sot.get_sdss_class(p_label[0])
 
-        if correct:
-            return 1
-        else:
-            return 0
+            return predicted_type, extra_data
 
-
-    def __del__(self, **arg):
-        # Get rid of all temp objects and files (if is required)
-        pass
 
 if __name__ == '__main__':
 
