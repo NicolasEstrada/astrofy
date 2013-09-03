@@ -56,6 +56,7 @@ _get_radius = lambda *x: random.uniform(*RADIUS_range)
 
 client = pymongo.MongoClient("localhost", 27017)
 db = client.test
+db.objects.ensure_index([('id', 1)])
 
 
 def get_ids(ra, dec, radius, limit=None):
@@ -157,7 +158,7 @@ def save_and_get_files(ids, format='json'):
 # http://dr10.sdss3.org/sas/dr10/boss/photoObj/frames/301/4570/4/frame-i-004570-4-0135.fits.bz2
 # http://dr10.sdss3.org/sas/dr10/boss/photoObj/frames/301/4570/4/frame-z-004570-4-0135.fits.bz2
 
-def download_files(format='irg'):
+def download_files(format='irg', limit=3):
 	"""Download the files in json format"""
 
 	logger.info("Starting download process")
@@ -169,12 +170,12 @@ def download_files(format='irg'):
 	# import pdb
 	# pdb.set_trace()
 
-	success = False
+	download_count = 0
 
 	for sdss_id, sdss_object in save_and_get_files(
 							     get_ids(_get_ra(),
 							     		 _get_dec(),
-							     		 _get_radius(), 3)):
+							     		 _get_radius(), limit)):
 
 		params = {
 		    'ext': ext,
@@ -212,7 +213,6 @@ def download_files(format='irg'):
 
 		# Storing the image locally
 		if result.status_code == 200:
-			success = True
 			# payload = result.json()
 			file_path = IMAGE_PATH + sdss_id + '.' + ext
 			with open(file_path, 'w') as out_file:
@@ -235,16 +235,18 @@ def download_files(format='irg'):
 			}
 
 			db.objects.save(astrofy_data)
-			db.objects.ensure_index([('id', 1)])
+
+			download_count += 1
 			# TODO: -> mongo: objects, results
 
 		wait(logger, 1)
 
-	if success:
-		return True
+	if download_count:
+		logger.info("{0} files downloaded".format(download_count))
 	else:
 		logger.info("No files downloaded")
-		return False
+
+	return download_count
 
 
 
@@ -254,9 +256,17 @@ if __name__ == '__main__':
 	# 	ids = get_ids(_get_ra(), _get_dec(), _get_radius(), 50)
 	# 	wait(logger)
 	# 	download_files(ids)
-	
-	for retry in xrange(0, RETRIES):
-		logger.info("Start progress ... Attemp: {0}".format(retry))
-		wait(logger)
-		if download_files():
-			break
+
+	while(True):
+
+		if True:
+			for retry in xrange(0, RETRIES):
+				logger.info("Start progress ... Attemp: {0}".format(retry))
+				wait(logger)
+				qty = download_files(limit=2)
+				if qty:
+					break
+		else:
+			wait(logger, 10, False)
+
+

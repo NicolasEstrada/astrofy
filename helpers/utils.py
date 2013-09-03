@@ -20,8 +20,8 @@ logger.addHandler(flhdl)
 MAX_WAIT = 4
 
 
-def wait(logger=None, max_wait=MAX_WAIT):
-    secs =  max_wait / random.uniform(1, max_wait)
+def wait(logger=None, max_wait=MAX_WAIT, rand=True):
+    secs =  max_wait / random.uniform(1, max_wait) if rand else max_wait
 
     if logger:
         logger.debug("Waiting for {0:.2f} seconds".format(secs))
