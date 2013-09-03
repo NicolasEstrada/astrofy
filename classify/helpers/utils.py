@@ -10,6 +10,13 @@ import time
 import random
 import logging
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+    # Avoid SumblimeLinter warnings
+    json
+
 FORMAT = '%(asctime)-15s - %(levelname)s - %(message)s'
 logging.basicConfig(format=FORMAT)
 
