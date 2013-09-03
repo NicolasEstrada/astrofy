@@ -45,7 +45,7 @@ class ClassiStar(object):
         .
     """
 
-    def __init__(self, obj, obj_path=None, model_path=None):
+    def __init__(self, obj, model_path=None):
         """initiaze object parameters.
 
         Args:
@@ -61,16 +61,18 @@ class ClassiStar(object):
         self._description = "Astronomical object clasification"
 
         self.start_ts = datetime.datetime.utcnow()
-        # self.uri = obj_path
-        # self.id = "sdss.274.51913.93.26"
-        # self.objid = "1237654669203079226"
 
-        # We get the data directly from the websocket as a python dicionary. 
-        self.obj_json = obj
-        # self._get_object()
+        if isinstance(obj, basestring):
+            # We have to load the file.
+            self.uri = obj
+            self._get_object()
+        else:
+            # We get the data directly from the
+            # websocket as a python dicionary. 
+            self.obj_json = obj
 
-        self.id = obj["objc_id"]
-        self.objid = obj['id']
+        self.objid = self.obj_json['id']
+        self.objtype = self.obj_json['objc_type']
 
 
         self.model = None
@@ -193,7 +195,8 @@ class ClassiStar(object):
             extra_data = {
                 "predicted_value": p_val[0][0],
                 "start_dt": self.start_ts.strftime(DT_FORMAT),
-                "end_dt": self.end_ts.strftime(DT_FORMAT)}
+                "end_dt": self.end_ts.strftime(DT_FORMAT),
+                "sdss_class": self.objtype}
 
             predicted_type = sot.get_sdss_class(p_label[0])
 
@@ -215,7 +218,12 @@ if __name__ == '__main__':
         if cs.obj_json['objc_type'] not in [3, 6]:
             continue
 
-        results.append(cs.classify())
+        predicted_type, extra_data  = cs.classify()
+        
+        if predicted_type == extra_data["sdss_class"]:
+            results.append(1)
+        else:
+            results.append(0)
 
         if n % 5 == 0:
             try:

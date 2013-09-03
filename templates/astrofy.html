@@ -54,6 +54,9 @@ function log(msg){
 	document.getElementById('chat_log').innerHTML += msg + "</br/>";
 };
 
+function update_stash_counter () {
+	document.getElementById('local_stash').innerHTML = incoming_objects.length.toString();
+};
 
 $(document).ready(function(){
 
@@ -71,11 +74,15 @@ $(document).ready(function(){
 				$('#img_box').attr('status', '0');
 			}
 			else{
+				if (incoming_objects.length > 19){
+					return;
+				}
 				var stash = JSON.parse(msg.data);
 				var keys = (stash.path).split('/');
 				log("RCVD(stash): " + keys[keys.length - 1]);
 				incoming_objects.push(stash);
 			}
+			update_stash_counter();
 		};
 	ws.onclose = function(){
 			log("Connection Closed");
@@ -113,6 +120,7 @@ function lock_checkboxes() {
 function refresh(){
 	if (incoming_objects.length > 0){
 	    current = incoming_objects.pop();
+	    update_stash_counter();
 		var keys = (current.path).split('/');
 		log("RCVD(show): " + keys[keys.length - 1]);
 		$('#img_box').attr('src', 'get_image/' + keys[keys.length - 1]);
@@ -163,8 +171,9 @@ function classify(){
 		<input class="checkbox" id="cbs" type="checkbox" name="star" value="6" onclick="lock_checkboxes()">Star<br>
 		<input class="checkbox" id="cbg" type="checkbox" name="galaxy" value="3" onclick="lock_checkboxes()">Galaxy<br>
 		<input class="checkbox" id="cbu" type="checkbox" name="unkown" value="0" onclick="lock_checkboxes()">Unkown<br><br><br>
-		<td> <input id="" type="button" value="Classify" onclick="classify()"></td>
-		<td> <input type="button" value="Close" onclick="ws_close()"></td>
+		<input id="" type="button" value="Classify" onclick="classify()">
+		<input type="button" value="Close" onclick="ws_close()"><br><br><br>
+		<div>Local Stash size: <p id="local_stash"></p></div>
 	</div>
 
 	<div class="right_col">

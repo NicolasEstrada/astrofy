@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 """This is a module that consume object desctiptions from
 a WebSocket using websocket-client library
 (github.com/liris/websocket-client v0.11.0)
@@ -96,7 +96,7 @@ def on_open(ws):
 
 
 def run(listen_url):
-    # websocket.enableTrace(True)
+    websocket.enableTrace(True)
 
     ws = websocket.WebSocketApp(
         listen_url,
@@ -113,15 +113,15 @@ if __name__ == "__main__":
         description='WebSocket Hook for the automatic classifier')
 
     parser.add_argument(
-        '-u', type=str, default='127.0.0.1',
-        help='Listening Url (default: 127.0.0.1)')
-    parser.add_argument('-p', type=str, default='80',
-        help='Listening port (default: 80)')
+        '-u', type=str, default='localhost',
+        help='Listening Url (default: localhost)')
+    parser.add_argument('-p', type=str, default='8888',
+        help='Listening port (default: 8888)')
 
     args = parser.parse_args()
 
     url = args.u
     port = args.p
 
-    url_str = "{}:{}/"
+    url_str = "ws://{}:{}/ws_clasistar"
     run(url_str.format(url, port))
